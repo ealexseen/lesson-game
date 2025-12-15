@@ -1,0 +1,37 @@
+[gd_scene load_steps=7 format=3 uid="uid://bgllyr4dxpr28"]
+
+[ext_resource type="Texture2D" uid="uid://osa1wgyqn5ax" path="res://shared/assets/images/icon.svg" id="1_oul6g"]
+[ext_resource type="Script" uid="uid://bqrrx5yf5tnkq" path="res://shared/objects/player/player.gd" id="1_rkbax"]
+[ext_resource type="PackedScene" uid="uid://ditft3lrgvsf3" path="res://shared/objects/abilities/managers/ability_manager/ability_manager.tscn" id="3_g1dw6"]
+[ext_resource type="PackedScene" uid="uid://cp3p55xisn3sh" path="res://shared/objects/player/equippable_item_holder/equippable_item_holder.tscn" id="3_xkryw"]
+[ext_resource type="PackedScene" uid="uid://hhv0gs0voudq" path="res://shared/gui/components/player_menu/managers/manager_inventory/manager_inventory.tscn" id="4_jnjyq"]
+[ext_resource type="PackedScene" uid="uid://bb6yyqqcchsnt" path="res://shared/gui/components/hot_bar/managers/equipped_item_manager/equipped_item_manager.tscn" id="5_gnkmh"]
+
+[node name="Player" type="CharacterBody2D" unique_id=1070709042]
+process_mode = 1
+z_index = 1
+collision_mask = 26
+script = ExtResource("1_rkbax")
+
+[node name="Icon" type="Sprite2D" parent="." unique_id=3232867]
+position = Vector2(-1, -1)
+texture = ExtResource("1_oul6g")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=839791096]
+zoom = Vector2(0.7, 0.7)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1865526806]
+polygon = PackedVector2Array(-65, -54, -60, -61, -53, -65, 51, -65, 58, -61, 63, -53, 63, 51, 59, 57, 52, 63, -53, 63, -60, 59, -65, 51)
+
+[node name="EquippableItemHolder" parent="." unique_id=2060145158 instance=ExtResource("3_xkryw")]
+unique_name_in_owner = true
+position = Vector2(63, 1)
+
+[node name="Managers" type="Node" parent="." unique_id=1604898281]
+
+[node name="AbilityManager" parent="Managers" unique_id=1387971366 node_paths=PackedStringArray("player") instance=ExtResource("3_g1dw6")]
+player = NodePath("../..")
+
+[node name="ManagerInventory" parent="Managers" unique_id=572309664 instance=ExtResource("4_jnjyq")]
+
+[node name="EquippedItemManager" parent="Managers" unique_id=877364062 instance=ExtResource("5_gnkmh")]

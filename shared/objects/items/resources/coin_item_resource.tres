@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=3 format=3 uid="uid://conabd33vdctr"]
+
+[ext_resource type="Script" uid="uid://b5sp5k3gqh1tj" path="res://shared/objects/items/resources/item_resource.gd" id="1_vyvx5"]
+[ext_resource type="Texture2D" uid="uid://q8w3hchc5wm2" path="res://shared/assets/images/coin_simple.png" id="1_w3a80"]
+
+[resource]
+script = ExtResource("1_vyvx5")
+item_key = 1
+display_name = "Монетка"
+icon = ExtResource("1_w3a80")
+description = "Это золотистый блестящий кружочек, который приносит тебе пользу, когда ты её собираешь!"
+metadata/_custom_type_script = "uid://b5sp5k3gqh1tj"

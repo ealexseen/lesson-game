@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=3 format=3 uid="uid://da6idkdpdsf5l"]
+
+[ext_resource type="Script" uid="uid://b5sp5k3gqh1tj" path="res://shared/objects/items/resources/item_resource.gd" id="1_51g12"]
+[ext_resource type="Texture2D" uid="uid://cweewbsebjxiv" path="res://shared/assets/images/stone.png" id="1_t2lvk"]
+
+[resource]
+script = ExtResource("1_51g12")
+item_key = 3
+display_name = "Камень"
+icon = ExtResource("1_t2lvk")
+description = "Это ресурс который можно найти где-то)))"
+metadata/_custom_type_script = "uid://b5sp5k3gqh1tj"

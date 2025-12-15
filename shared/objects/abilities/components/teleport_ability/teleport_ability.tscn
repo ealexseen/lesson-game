@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://3pyuhic4gtcj"]
+
+[ext_resource type="Script" uid="uid://dpl0r5pj35w0m" path="res://shared/objects/abilities/components/teleport_ability/teleport_ability.gd" id="1_4sn2j"]
+
+[node name="TeleportAbility" type="Node2D" unique_id=2124526649]
+script = ExtResource("1_4sn2j")
+ability_name = "Teleport Ability"
+item_key = 1

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WeaponItemResource" load_steps=3 format=3 uid="uid://x7oqlisflwut"]
+
+[ext_resource type="Texture2D" uid="uid://yncwunpbqn4k" path="res://shared/assets/images/axe.png" id="1_vj54y"]
+[ext_resource type="Script" uid="uid://bo2bcqarrep21" path="res://shared/objects/items/resources/weapon_item_resource.gd" id="2_vj54y"]
+
+[resource]
+script = ExtResource("2_vj54y")
+item_key = 12
+display_name = "Топор"
+icon = ExtResource("1_vj54y")
+description = "Орудие для рубки в виде насаженной на деревянную рукоять толстой железной лопасти с острым лезвием с одной стороны и обухом с другой."
+is_equippable = true
+metadata/_custom_type_script = "uid://b5sp5k3gqh1tj"

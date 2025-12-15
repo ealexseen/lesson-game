@@ -1,0 +1,29 @@
+[gd_scene load_steps=2 format=3 uid="uid://du40iruwacmat"]
+
+[ext_resource type="Script" uid="uid://cup3qe1oo87bf" path="res://shared/gui/components/bulletin/components/interaction_prompt/interaction_prompt.gd" id="1_rigrb"]
+
+[node name="InteractionPrompt" type="Control" unique_id=2002150086]
+z_index = 10
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_rigrb")
+metadata/_custom_type_script = "uid://dwoexivj4vlsd"
+
+[node name="Label" type="Label" parent="." unique_id=2133949311]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 64)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -64.0
+offset_top = -32.0
+offset_right = 64.0
+offset_bottom = 32.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2

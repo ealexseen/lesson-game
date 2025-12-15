@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://bg4ytc0h2me4p"]
+
+[ext_resource type="Script" uid="uid://bx8c1l76p087g" path="res://shared/gui/components/cursor/cursor_menu/cursor_menu.gd" id="1_3u1no"]
+[ext_resource type="Texture2D" uid="uid://b8k7uhkxm1nme" path="res://shared/assets/images/cursor.png" id="2_3u1no"]
+
+[node name="CursorMenu" type="Node2D" unique_id=146179460]
+z_index = 10
+script = ExtResource("1_3u1no")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1052280784]
+custom_minimum_size = Vector2(30, 30)
+offset_left = -8.0
+offset_top = -5.0
+offset_right = 22.0
+offset_bottom = 25.0
+texture = ExtResource("2_3u1no")
+expand_mode = 1

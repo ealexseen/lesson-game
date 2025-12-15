@@ -1,0 +1,18 @@
+[gd_scene load_steps=5 format=3 uid="uid://crawbu7cwud3h"]
+
+[ext_resource type="PackedScene" uid="uid://3v4v1b13efak" path="res://shared/gui/components/navigations/navigation_base/navigation_base.tscn" id="1_mc324"]
+[ext_resource type="Script" uid="uid://bfhd6mhyn4ppf" path="res://shared/gui/components/navigations/navigation_game/navigation_game.gd" id="2_kfwfs"]
+[ext_resource type="PackedScene" uid="uid://phdq1kmndagf" path="res://shared/gui/components/buttons/button_exit/button_exit.tscn" id="2_kvc2a"]
+[ext_resource type="PackedScene" uid="uid://dgow2yqpwjpm1" path="res://shared/gui/components/buttons/button_start_menu/button_start_menu.tscn" id="3_5s1sg"]
+
+[node name="NavigationGame" unique_id=1809149779 instance=ExtResource("1_mc324")]
+script = ExtResource("2_kfwfs")
+
+[node name="Title" parent="PanelContainer/VBoxContainer" parent_id_path=PackedInt32Array(465912269) index="0" unique_id=1966593562]
+text = "Game Menu"
+
+[node name="ButtonStartMenu" parent="PanelContainer/VBoxContainer" parent_id_path=PackedInt32Array(465912269) index="1" unique_id=402692796 instance=ExtResource("3_5s1sg")]
+layout_mode = 2
+
+[node name="ButtonExit" parent="PanelContainer/VBoxContainer" parent_id_path=PackedInt32Array(465912269) index="2" unique_id=139092568 instance=ExtResource("2_kvc2a")]
+layout_mode = 2

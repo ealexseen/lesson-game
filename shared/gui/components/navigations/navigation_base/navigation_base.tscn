@@ -1,0 +1,44 @@
+[gd_scene load_steps=4 format=3 uid="uid://3v4v1b13efak"]
+
+[ext_resource type="Script" uid="uid://0l0uaet371mb" path="res://shared/gui/components/navigations/navigation_base/navigation_base.gd" id="1_r30di"]
+[ext_resource type="Theme" uid="uid://due8olnny4q8h" path="res://shared/theme/theme.tres" id="2_j081a"]
+
+[sub_resource type="Theme" id="Theme_oivhs"]
+
+[node name="Navigation" type="Control" unique_id=2129780894]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_oivhs")
+script = ExtResource("1_r30di")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=2050216374]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -60.0
+offset_right = 200.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_j081a")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer" unique_id=465912269]
+unique_name_in_owner = true
+layout_mode = 2
+theme = ExtResource("2_j081a")
+
+[node name="Title" type="Label" parent="PanelContainer/VBoxContainer" unique_id=1966593562]
+unique_name_in_owner = true
+layout_mode = 2
+theme = ExtResource("2_j081a")
+text = "Main Menu"
+horizontal_alignment = 1

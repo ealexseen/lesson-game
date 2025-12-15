@@ -1,0 +1,26 @@
+[gd_scene load_steps=6 format=3 uid="uid://bgllyr4dxpr28"]
+
+[ext_resource type="Texture2D" uid="uid://osa1wgyqn5ax" path="res://images/icon.svg" id="1_oul6g"]
+[ext_resource type="Script" uid="uid://bqrrx5yf5tnkq" path="res://player/player.gd" id="1_rkbax"]
+[ext_resource type="PackedScene" uid="uid://ditft3lrgvsf3" path="res://objects/abilities/AbilityManager/AbilityManager.tscn" id="3_g1dw6"]
+[ext_resource type="PackedScene" uid="uid://bgeh1hy0hi7mx" path="res://objects/abilities/DashAbility/DashAbility.tscn" id="4_qjkh3"]
+[ext_resource type="PackedScene" uid="uid://3pyuhic4gtcj" path="res://objects/abilities/TeleportAbility/TeleportAbility.tscn" id="5_g6k8r"]
+
+[node name="Player" type="CharacterBody2D" unique_id=1070709042]
+collision_mask = 2
+script = ExtResource("1_rkbax")
+
+[node name="Icon" type="Sprite2D" parent="." unique_id=3232867]
+position = Vector2(-1, -1)
+texture = ExtResource("1_oul6g")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=839791096]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1865526806]
+polygon = PackedVector2Array(-65, -54, -60, -61, -53, -65, 51, -65, 58, -61, 63, -53, 63, 51, 59, 57, 52, 63, -53, 63, -60, 59, -65, 51)
+
+[node name="AbilityManager" parent="." unique_id=1387971366 instance=ExtResource("3_g1dw6")]
+
+[node name="DashAbility" parent="." unique_id=877911297 instance=ExtResource("4_qjkh3")]
+
+[node name="TeleportAbility" parent="." unique_id=2124526649 instance=ExtResource("5_g6k8r")]

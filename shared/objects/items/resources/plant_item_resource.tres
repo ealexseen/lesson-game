@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=3 format=3 uid="uid://cpchv3c3rwbde"]
+
+[ext_resource type="Texture2D" uid="uid://flm8wd1gupjk" path="res://shared/assets/images/plant.png" id="1_i0qyq"]
+[ext_resource type="Script" uid="uid://b5sp5k3gqh1tj" path="res://shared/objects/items/resources/item_resource.gd" id="2_b0jrp"]
+
+[resource]
+script = ExtResource("2_b0jrp")
+display_name = "Растение"
+icon = ExtResource("1_i0qyq")
+description = "Ресурс для изготовления всяких изделий, ты можешь что-то из него сделать"
+metadata/_custom_type_script = "uid://b5sp5k3gqh1tj"

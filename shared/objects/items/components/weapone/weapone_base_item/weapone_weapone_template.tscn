@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://c1mosr46holr7"]
+
+[ext_resource type="PackedScene" uid="uid://ckb4p6vonx3gb" path="res://shared/objects/items/components/weapone/weapone_base_item/weapone_item_template.tscn" id="1_l48h5"]
+[ext_resource type="Script" uid="uid://1bq011o3v7va" path="res://shared/objects/items/components/weapone/weapone_base_item/weapone_weapone_template.gd" id="2_7xqkh"]
+
+[node name="EquippableWeaponeTemplate" unique_id=2035206690 instance=ExtResource("1_l48h5")]
+script = ExtResource("2_7xqkh")
+
+[node name="HitCheckMarker" type="Marker2D" parent="." index="2" unique_id=1725229259]

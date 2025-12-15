@@ -1,0 +1,42 @@
+[gd_scene load_steps=5 format=3 uid="uid://brvkfjqyhgl8h"]
+
+[ext_resource type="Script" uid="uid://dmed0ol47ke3e" path="res://shared/objects/door/door.gd" id="1_lu671"]
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_voso2"]
+specular_color = Color(0.33315226, 0.5059064, 1, 1)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lu671"]
+size = Vector2(142, 230)
+
+[sub_resource type="LabelSettings" id="LabelSettings_lu671"]
+
+[node name="Door" type="Area2D" unique_id=469739784]
+show_behind_parent = true
+collision_layer = 8
+script = ExtResource("1_lu671")
+prompt = "Подойди к двери"
+
+[node name="PointPrompt" type="Marker2D" parent="." unique_id=2081340758]
+unique_name_in_owner = true
+position = Vector2(0, -264)
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=7107571]
+unique_name_in_owner = true
+position = Vector2(0, -114.99999)
+scale = Vector2(141, 228.38)
+texture = SubResource("CanvasTexture_voso2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=647369038]
+position = Vector2(0, -115)
+shape = SubResource("RectangleShape2D_lu671")
+
+[node name="Info" type="Label" parent="." unique_id=113927374]
+unique_name_in_owner = true
+offset_left = -71.0
+offset_top = -128.0
+offset_right = -8.0
+offset_bottom = -105.0
+scale = Vector2(2.2400017, 1)
+text = "Дверь"
+label_settings = SubResource("LabelSettings_lu671")
+horizontal_alignment = 1

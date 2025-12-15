@@ -1,0 +1,129 @@
+[gd_scene load_steps=10 format=3 uid="uid://dism1ib5lncje"]
+
+[ext_resource type="PackedScene" uid="uid://bgllyr4dxpr28" path="res://shared/objects/player/player.tscn" id="2_isi4y"]
+[ext_resource type="PackedScene" uid="uid://c4x0b611n6lxw" path="res://shared/objects/bullet/bullet.tscn" id="3_iat4p"]
+[ext_resource type="PackedScene" uid="uid://7ja651083dmm" path="res://shared/objects/ground/ground.tscn" id="4_bpow0"]
+[ext_resource type="PackedScene" uid="uid://brvkfjqyhgl8h" path="res://shared/objects/door/door.tscn" id="5_534y3"]
+[ext_resource type="PackedScene" uid="uid://bqgtvj87gapuj" path="res://shared/objects/items/components/items/coin_item/coin_item.tscn" id="5_q3sjy"]
+[ext_resource type="PackedScene" uid="uid://cvxefu27720nf" path="res://shared/objects/items/components/items/stick_item/stick_item.tscn" id="6_isi4y"]
+[ext_resource type="PackedScene" uid="uid://dsds4eomuellf" path="res://shared/objects/items/components/items/stone_item/stone_item.tscn" id="7_iat4p"]
+[ext_resource type="PackedScene" uid="uid://bf1b1hhnhk5t0" path="res://shared/objects/items/components/items/crystal_item/crystal_item.tscn" id="8_bpow0"]
+[ext_resource type="PackedScene" uid="uid://7fhkcqcybn36" path="res://shared/objects/items/components/items/plant_item/plant_item.tscn" id="9_534y3"]
+
+[node name="StageController" type="Node" unique_id=1375411740]
+
+[node name="Player" parent="." unique_id=1070709042 instance=ExtResource("2_isi4y")]
+position = Vector2(-197, -33)
+bullet_schene = ExtResource("3_iat4p")
+
+[node name="Grounds1" type="Node" parent="." unique_id=1288062055]
+
+[node name="Ground" parent="Grounds1" unique_id=1442082880 instance=ExtResource("4_bpow0")]
+position = Vector2(16, 290)
+
+[node name="Ground2" parent="Grounds1" unique_id=1561865742 instance=ExtResource("4_bpow0")]
+position = Vector2(20, -958)
+
+[node name="Ground3" parent="Grounds1" unique_id=774277765 instance=ExtResource("4_bpow0")]
+position = Vector2(-627, -334)
+rotation = 1.5707964
+
+[node name="Ground4" parent="Grounds1" unique_id=1540867731 instance=ExtResource("4_bpow0")]
+position = Vector2(663, -334)
+rotation = 1.5707964
+
+[node name="Grounds2" type="Node" parent="." unique_id=1166718234]
+
+[node name="Ground" parent="Grounds2" unique_id=1447971563 instance=ExtResource("4_bpow0")]
+position = Vector2(6407, 291)
+scale = Vector2(9.04, 1)
+
+[node name="Ground2" parent="Grounds2" unique_id=792848244 instance=ExtResource("4_bpow0")]
+position = Vector2(7463, -1394)
+scale = Vector2(1.96, 1)
+
+[node name="Ground3" parent="Grounds2" unique_id=1661492403 instance=ExtResource("4_bpow0")]
+position = Vector2(6406, -739)
+rotation = 1.5707964
+
+[node name="Ground4" parent="Grounds2" unique_id=680360178 instance=ExtResource("4_bpow0")]
+position = Vector2(8543, -743)
+rotation = 1.5707964
+
+[node name="Door1" parent="." unique_id=469739784 node_paths=PackedStringArray("door_to") instance=ExtResource("5_534y3")]
+position = Vector2(61, 280)
+door_to = NodePath("../Door2")
+
+[node name="Door2" parent="." unique_id=93393993 node_paths=PackedStringArray("door_to") instance=ExtResource("5_534y3")]
+position = Vector2(7071, 281)
+door_to = NodePath("../Door1")
+
+[node name="Door3" parent="." unique_id=1781913232 node_paths=PackedStringArray("door_to") instance=ExtResource("5_534y3")]
+position = Vector2(7066, -1405)
+door_to = NodePath("../Door4")
+
+[node name="Door4" parent="." unique_id=1677765396 node_paths=PackedStringArray("door_to") instance=ExtResource("5_534y3")]
+position = Vector2(301, -968)
+door_to = NodePath("../Door2")
+
+[node name="Items" type="Node" parent="." unique_id=1628469630]
+
+[node name="CoinItem" parent="Items" unique_id=874065668 instance=ExtResource("5_q3sjy")]
+position = Vector2(484, 248)
+
+[node name="CoinItem2" parent="Items" unique_id=1614502723 instance=ExtResource("5_q3sjy")]
+position = Vector2(1497, 248)
+
+[node name="StickItem" parent="Items" unique_id=906241322 instance=ExtResource("6_isi4y")]
+position = Vector2(-450, 236)
+
+[node name="StickItem4" parent="Items" unique_id=1950108716 instance=ExtResource("6_isi4y")]
+position = Vector2(-208, 237)
+
+[node name="StickItem2" parent="Items" unique_id=1413722205 instance=ExtResource("6_isi4y")]
+position = Vector2(2992, 236)
+
+[node name="StoneItem" parent="Items" unique_id=659578717 instance=ExtResource("7_iat4p")]
+position = Vector2(1015, 237)
+
+[node name="StoneItem2" parent="Items" unique_id=108244196 instance=ExtResource("7_iat4p")]
+position = Vector2(1247, 237)
+
+[node name="StickItem3" parent="Items" unique_id=581477735 instance=ExtResource("6_isi4y")]
+position = Vector2(3410, 241)
+
+[node name="StoneItem4" parent="Items" unique_id=1150923101 instance=ExtResource("7_iat4p")]
+position = Vector2(6056, 241)
+
+[node name="StoneItem3" parent="Items" unique_id=259830924 instance=ExtResource("7_iat4p")]
+position = Vector2(1739, 237)
+
+[node name="BaseItem" parent="Items" unique_id=1741488007 instance=ExtResource("8_bpow0")]
+position = Vector2(5608, 242)
+
+[node name="BaseItem2" parent="Items" unique_id=1182431566 instance=ExtResource("8_bpow0")]
+position = Vector2(5478, 241)
+
+[node name="BaseItem3" parent="Items" unique_id=1950848618 instance=ExtResource("8_bpow0")]
+position = Vector2(5279, 242)
+
+[node name="PlantItem" parent="." unique_id=686401691 instance=ExtResource("9_534y3")]
+position = Vector2(216, 240)
+
+[node name="PlantItem2" parent="." unique_id=491140354 instance=ExtResource("9_534y3")]
+position = Vector2(367, 240)
+
+[node name="PlantItem3" parent="." unique_id=1627475585 instance=ExtResource("9_534y3")]
+position = Vector2(1366, 241)
+
+[node name="PlantItem4" parent="." unique_id=1519774895 instance=ExtResource("9_534y3")]
+position = Vector2(2335, 241)
+
+[node name="PlantItem7" parent="." unique_id=1313785040 instance=ExtResource("9_534y3")]
+position = Vector2(2047, 241)
+
+[node name="PlantItem5" parent="." unique_id=2002065624 instance=ExtResource("9_534y3")]
+position = Vector2(4826, 241)
+
+[node name="PlantItem6" parent="." unique_id=669602440 instance=ExtResource("9_534y3")]
+position = Vector2(4082, 241)

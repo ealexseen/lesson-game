@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bb6yyqqcchsnt"]
+
+[ext_resource type="Script" uid="uid://bvshbbb6f1cgt" path="res://shared/gui/components/hot_bar/managers/equipped_item_manager/equipped_item_manager.gd" id="1_mulg6"]
+
+[node name="EquippedItemManager" type="Node" unique_id=877364062]
+script = ExtResource("1_mulg6")

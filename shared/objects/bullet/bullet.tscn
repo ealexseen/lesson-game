@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3 uid="uid://c4x0b611n6lxw"]
+
+[ext_resource type="Script" uid="uid://bhqnl627uhxyu" path="res://shared/objects/bullet/bullet.gd" id="1_ofkrt"]
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_kmo65"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kmo65"]
+size = Vector2(10, 10)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ofkrt"]
+size = Vector2(10, 10)
+
+[node name="Bullet" type="RigidBody2D" unique_id=1139863339]
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("1_ofkrt")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=939948167]
+position = Vector2(2.3841858e-07, -2.3841858e-07)
+scale = Vector2(10, 10)
+texture = SubResource("CanvasTexture_kmo65")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1476066389]
+shape = SubResource("RectangleShape2D_kmo65")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=1920509542]
+collision_layer = 0
+collision_mask = 2
+
+[node name="AreaCollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=658775117]
+shape = SubResource("RectangleShape2D_ofkrt")
+debug_color = Color(0.811623, 0.34175962, 0.59510756, 0.41960785)
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="body_exited" from="." to="." method="_on_body_exited"]
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]
+[connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]

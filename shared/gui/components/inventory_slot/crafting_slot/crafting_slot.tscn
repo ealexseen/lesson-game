@@ -1,0 +1,32 @@
+[gd_scene load_steps=4 format=3 uid="uid://b4mdl2guvcdiu"]
+
+[ext_resource type="Theme" uid="uid://due8olnny4q8h" path="res://shared/theme/theme.tres" id="1_navwy"]
+[ext_resource type="Script" uid="uid://pwhx0p4nkjkv" path="res://shared/gui/components/inventory_slot/crafting_slot/crafting_slot.gd" id="2_cktto"]
+[ext_resource type="Texture2D" uid="uid://b0ea1uxyfu62h" path="res://shared/assets/images/crystal.png" id="2_hwb6k"]
+
+[node name="CraftingSlot" type="PanelContainer" unique_id=1867238390]
+custom_minimum_size = Vector2(96, 96)
+offset_right = 6.0
+offset_bottom = 6.0
+theme = ExtResource("1_navwy")
+theme_type_variation = &"PanelContainerDefault"
+script = ExtResource("2_cktto")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=217448611]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="IconTextureRect" type="TextureRect" parent="MarginContainer" unique_id=2140667792]
+unique_name_in_owner = true
+layout_mode = 2
+texture = ExtResource("2_hwb6k")
+expand_mode = 1
+
+[node name="Button" type="Button" parent="." unique_id=2067943511]
+layout_mode = 2
+focus_mode = 0
+theme = ExtResource("1_navwy")
+theme_type_variation = &"ButtonCrafting"

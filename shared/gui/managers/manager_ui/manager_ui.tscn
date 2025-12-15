@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b0kykekym3cki"]
+
+[ext_resource type="Script" uid="uid://bj17ieq3b8a0y" path="res://shared/gui/managers/manager_ui/manager_ui.gd" id="1_fbnix"]
+
+[node name="ManagerUi" type="Node" unique_id=1794067849]
+script = ExtResource("1_fbnix")

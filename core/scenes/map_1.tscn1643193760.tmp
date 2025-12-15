@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://dj221g62w8kdr"]
+
+[ext_resource type="PackedScene" uid="uid://bgllyr4dxpr28" path="res://player/player.tscn" id="1_p5fey"]
+[ext_resource type="PackedScene" uid="uid://7ja651083dmm" path="res://objects/ground/ground.tscn" id="2_bbd8t"]
+[ext_resource type="PackedScene" uid="uid://c4x0b611n6lxw" path="res://objects/bullet/bullet.tscn" id="2_nli1r"]
+[ext_resource type="PackedScene" uid="uid://blc6467djowee" path="res://ui/button-buy/button-buy.tscn" id="3_ae8pb"]
+
+[node name="Node" type="Node2D" unique_id=1749247587]
+
+[node name="Player" parent="." unique_id=1437491768 instance=ExtResource("1_p5fey")]
+bullet_schene = ExtResource("2_nli1r")
+
+[node name="Ground" parent="." unique_id=307293753 instance=ExtResource("2_bbd8t")]
+position = Vector2(16, 290)
+
+[node name="Ground2" parent="." unique_id=1447783949 instance=ExtResource("2_bbd8t")]
+position = Vector2(20, -958)
+
+[node name="Ground3" parent="." unique_id=993686749 instance=ExtResource("2_bbd8t")]
+position = Vector2(-627, -334)
+rotation = 1.5707964
+
+[node name="Ground4" parent="." unique_id=1190187522 instance=ExtResource("2_bbd8t")]
+position = Vector2(663, -334)
+rotation = 1.5707964
+
+[node name="Button" parent="." unique_id=209566722 node_paths=PackedStringArray("player") instance=ExtResource("3_ae8pb")]
+anchors_preset = 0
+player = NodePath("../Player")

@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://bgeh1hy0hi7mx"]
+
+[ext_resource type="PackedScene" uid="uid://b5jtofyj38wkr" path="res://shared/objects/abilities/components/ability_base/ability_base.tscn" id="1_th75b"]
+
+[node name="AbilityBase" unique_id=1964345730 instance=ExtResource("1_th75b")]

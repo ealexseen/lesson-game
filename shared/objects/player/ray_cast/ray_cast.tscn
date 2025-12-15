@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://1qq5g0pp2obo"]
+
+[ext_resource type="Script" uid="uid://dqaf2jyalwnfo" path="res://shared/objects/player/ray_cast/ray_cast.gd" id="1_bcv0m"]
+
+[node name="RayCast" type="RayCast2D" unique_id=1049821904]
+target_position = Vector2(0, 500)
+collision_mask = 8
+collide_with_areas = true
+script = ExtResource("1_bcv0m")

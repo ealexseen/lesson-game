@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://hhv0gs0voudq"]
+
+[ext_resource type="Script" uid="uid://n0rfeqe2wo28" path="res://shared/gui/components/player_menu/managers/manager_inventory/manager_inventory.gd" id="1_gkynd"]
+
+[node name="ManagerInventory" type="Node" unique_id=572309664]
+script = ExtResource("1_gkynd")

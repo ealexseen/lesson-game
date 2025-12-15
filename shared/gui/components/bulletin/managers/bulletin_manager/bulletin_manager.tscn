@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bujq221mr61df"]
+
+[ext_resource type="Script" uid="uid://0airuku16itw" path="res://shared/gui/components/bulletin/managers/bulletin_manager/bulletin_manager.gd" id="1_23ydx"]
+
+[node name="BulletinManager" type="Node" unique_id=1917312305]
+script = ExtResource("1_23ydx")

@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://b5jtofyj38wkr"]
+
+[ext_resource type="Script" uid="uid://iw7utkple4pd" path="res://shared/objects/abilities/components/ability_base/ability_base.gd" id="1_1n5k2"]
+[ext_resource type="Texture2D" uid="uid://osa1wgyqn5ax" path="res://shared/assets/images/icon.svg" id="2_qa06b"]
+
+[node name="AbilityBase" type="Node2D" unique_id=1964345730]
+script = ExtResource("1_1n5k2")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1178577438]
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("2_qa06b")
+expand_mode = 1

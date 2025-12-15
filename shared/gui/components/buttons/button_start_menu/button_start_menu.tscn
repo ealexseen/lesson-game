@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://dgow2yqpwjpm1"]
+
+[ext_resource type="PackedScene" uid="uid://blc6467djowee" path="res://shared/gui/components/buttons/button_base/button_base.tscn" id="1_cf48v"]
+[ext_resource type="Script" uid="uid://b34a2c2b8qbl" path="res://shared/gui/components/buttons/button_start_menu/button_start_menu.gd" id="2_pl6l0"]
+
+[node name="ButtonStartMenu" unique_id=139092568 instance=ExtResource("1_cf48v")]
+text = "Menu"
+script = ExtResource("2_pl6l0")

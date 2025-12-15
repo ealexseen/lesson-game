@@ -1,0 +1,37 @@
+[gd_scene load_steps=8 format=3 uid="uid://dj221g62w8kdr"]
+
+[ext_resource type="Script" uid="uid://1st7j1eteodn" path="res://core/scenes/map_1/map_1.gd" id="1_gbsvo"]
+[ext_resource type="PackedScene" uid="uid://bg4ytc0h2me4p" path="res://shared/gui/components/cursor/cursor_menu/cursor_menu.tscn" id="4_2vcri"]
+[ext_resource type="PackedScene" uid="uid://d0uov6cgmsoae" path="res://shared/gui/components/cursor/cursor_game/cursor_game.tscn" id="4_fog8g"]
+[ext_resource type="PackedScene" uid="uid://b0kykekym3cki" path="res://shared/gui/managers/manager_ui/manager_ui.tscn" id="6_fog8g"]
+[ext_resource type="PackedScene" uid="uid://bujq221mr61df" path="res://shared/gui/components/bulletin/managers/bulletin_manager/bulletin_manager.tscn" id="6_wqnuq"]
+[ext_resource type="PackedScene" uid="uid://ti2n868behaj" path="res://shared/gui/components/hot_bar/components/hot_bar.tscn" id="7_gbsvo"]
+[ext_resource type="PackedScene" uid="uid://m2d25c6cv54u" path="res://core/stages/managers/stage_manager/stage_manager.tscn" id="8_fog8g"]
+
+[node name="MainGame" type="Node" unique_id=1406728254]
+script = ExtResource("1_gbsvo")
+
+[node name="CursorGame" parent="." unique_id=1108713523 instance=ExtResource("4_fog8g")]
+unique_name_in_owner = true
+
+[node name="UILayer" type="CanvasLayer" parent="." unique_id=374898223]
+process_mode = 3
+
+[node name="CursorMenu" parent="UILayer" unique_id=146179460 instance=ExtResource("4_2vcri")]
+unique_name_in_owner = true
+visible = false
+
+[node name="HUDController" type="Node" parent="UILayer" unique_id=1592681573]
+process_mode = 3
+
+[node name="ActionBar" parent="UILayer" unique_id=1543694819 instance=ExtResource("7_gbsvo")]
+
+[node name="ManagerUi" parent="UILayer" unique_id=1794067849 instance=ExtResource("6_fog8g")]
+
+[node name="Managers" type="Node" parent="." unique_id=1778920183]
+process_mode = 3
+
+[node name="BulletinManager" parent="Managers" unique_id=1917312305 instance=ExtResource("6_wqnuq")]
+
+[node name="StageManager" parent="Managers" unique_id=1508113240 instance=ExtResource("8_fog8g")]
+unique_name_in_owner = true

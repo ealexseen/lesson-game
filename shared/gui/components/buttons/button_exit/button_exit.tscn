@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://phdq1kmndagf"]
+
+[ext_resource type="PackedScene" uid="uid://blc6467djowee" path="res://shared/gui/components/buttons/button_base/button_base.tscn" id="1_evw5x"]
+[ext_resource type="Script" uid="uid://drtms5aalqxe2" path="res://shared/gui/components/buttons/button_exit/button_exit.gd" id="2_almo0"]
+
+[node name="ButtonExit" unique_id=139092568 instance=ExtResource("1_evw5x")]
+text = "Exit"
+script = ExtResource("2_almo0")

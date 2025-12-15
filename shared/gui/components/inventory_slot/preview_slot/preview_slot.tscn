@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://cfkc6w6st7ver"]
+
+[ext_resource type="Script" uid="uid://vxhv41euwq5t" path="res://shared/gui/components/inventory_slot/preview_slot/preview_slot.gd" id="1_fbtc0"]
+
+[node name="PreviewSlot" type="TextureRect" unique_id=1793245697]
+modulate = Color(1, 1, 1, 0.5)
+custom_minimum_size = Vector2(50, 50)
+offset_right = 50.0
+offset_bottom = 50.0
+expand_mode = 1
+script = ExtResource("1_fbtc0")

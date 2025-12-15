@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cp3p55xisn3sh"]
+
+[ext_resource type="Script" uid="uid://cjddi402w34vo" path="res://shared/objects/player/equippable_item_holder/equippable_item_holder.gd" id="1_m5c2y"]
+
+[node name="EquippableItemHolder" type="Node2D" unique_id=2060145158]
+script = ExtResource("1_m5c2y")

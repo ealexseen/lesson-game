@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://7fhkcqcybn36"]
+
+[ext_resource type="PackedScene" uid="uid://d4kkomcpdynfb" path="res://shared/objects/items/components/items/base_item/base_item.tscn" id="1_fs6r7"]
+[ext_resource type="Texture2D" uid="uid://flm8wd1gupjk" path="res://shared/assets/images/plant.png" id="2_fobox"]
+
+[node name="PlantItem" unique_id=874065668 instance=ExtResource("1_fs6r7")]
+
+[node name="TextureRect" parent="." index="1" unique_id=293043908]
+texture = ExtResource("2_fobox")

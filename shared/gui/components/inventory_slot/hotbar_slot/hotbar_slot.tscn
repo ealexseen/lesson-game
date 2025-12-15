@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3 uid="uid://cavlrm7as0c8k"]
+
+[ext_resource type="PackedScene" uid="uid://cgy8eoe7vc33m" path="res://shared/gui/components/inventory_slot/inventory_slot/inventory_slot.tscn" id="1_xaqm2"]
+[ext_resource type="Script" uid="uid://dfngybc0u2hsa" path="res://shared/gui/components/inventory_slot/hotbar_slot/hotbar_slot.gd" id="2_ouine"]
+[ext_resource type="Theme" uid="uid://due8olnny4q8h" path="res://shared/theme/theme.tres" id="2_yb84v"]
+
+[sub_resource type="SystemFont" id="SystemFont_yb84v"]
+subpixel_positioning = 0
+
+[node name="HotbarSlot" unique_id=105334727 groups=["hotbar_slots"] instance=ExtResource("1_xaqm2")]
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_type_variation = &"PanelContainerMetal"
+script = ExtResource("2_ouine")
+
+[node name="MarginContainerNumber" type="MarginContainer" parent="." index="1" unique_id=1188707339]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_constants/margin_left = -12
+theme_override_constants/margin_top = -12
+
+[node name="ContainerNumber" type="PanelContainer" parent="MarginContainerNumber" index="0" unique_id=150843240]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme = ExtResource("2_yb84v")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="Number" type="Label" parent="MarginContainerNumber/ContainerNumber" index="0" unique_id=198379342]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_fonts/font = SubResource("SystemFont_yb84v")
+theme_override_font_sizes/font_size = 12
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1

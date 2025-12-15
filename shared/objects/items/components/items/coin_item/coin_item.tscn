@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3 uid="uid://bqgtvj87gapuj"]
+
+[ext_resource type="PackedScene" uid="uid://d4kkomcpdynfb" path="res://shared/objects/items/components/items/base_item/base_item.tscn" id="1_xoe3d"]
+[ext_resource type="Texture2D" uid="uid://q8w3hchc5wm2" path="res://shared/assets/images/coin_simple.png" id="2_4c5pv"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_4c5pv"]
+radius = 30.0
+
+[node name="CoinItem" unique_id=874065668 instance=ExtResource("1_xoe3d")]
+prompt = "Монетка"
+
+[node name="TextureRect" parent="." index="1" unique_id=293043908]
+custom_minimum_size = Vector2(60, 60)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -30.0
+offset_top = -30.0
+offset_right = 30.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_4c5pv")
+
+[node name="CollisionShape2D" parent="." index="2" unique_id=1046201066]
+shape = SubResource("CircleShape2D_4c5pv")

@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://blc6467djowee"]
+
+[ext_resource type="Theme" uid="uid://due8olnny4q8h" path="res://shared/theme/theme.tres" id="1_o8ei0"]
+[ext_resource type="Script" uid="uid://chusta2n5a8hw" path="res://shared/gui/components/buttons/button_base/button_base.gd" id="2_1imm2"]
+
+[node name="ButtonBase" type="Button" unique_id=139092568]
+offset_right = 53.0
+offset_bottom = 43.0
+theme = ExtResource("1_o8ei0")
+theme_type_variation = &"NewGameButton"
+text = "Base Button"
+script = ExtResource("2_1imm2")
