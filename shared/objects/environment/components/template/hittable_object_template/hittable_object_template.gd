@@ -4,6 +4,7 @@ class_name HittableObjectTemplate extends Node2D
 
 @onready var item_spawn_points: Node2D = %ItemSpawnPoints
 @onready var hitbox: Hitbox = %Hitbox
+@onready var animation_player: AnimationPlayer = %AnimationPlayer
 
 var current_health : float
 
@@ -15,8 +16,6 @@ func _ready() -> void:
 
 
 func register_hit(weapon_item_resource: WeaponItemResource) -> void:
-	print(weapon_item_resource)
-	
 	if not attributes.weapon_filter.is_empty() and not weapon_item_resource.item_key in attributes.weapon_filter:
 		return
 	
@@ -24,6 +23,11 @@ func register_hit(weapon_item_resource: WeaponItemResource) -> void:
 	
 	if current_health <= 0:
 		die()
+	else:
+		if animation_player.is_playing():
+			return
+		
+		animation_player.play("hit")
 
 
 func die() -> void:

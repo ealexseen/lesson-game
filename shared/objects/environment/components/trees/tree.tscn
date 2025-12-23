@@ -26,8 +26,8 @@ rotation = 1.5707964
 build_mode = 1
 polygon = PackedVector2Array(8, -33, 3, -63, 5, -113, 7, -199, 0, -242, -4, -277, -26, -287, -56, -274, -39, -252, -28, -231, -30, -139, -32, -100, -26, -76, -34, -40, -35, -15, 7, -13)
 
-[node name="Tree" type="Sprite2D" parent="." index="3" unique_id=482665220]
+[node name="Tree" type="Sprite2D" parent="WrapperImage" parent_id_path=PackedInt32Array(1623845633) index="0" unique_id=482665220]
 z_index = 1
-position = Vector2(-2.2888184e-05, -293.99997)
+position = Vector2(0, -293.955)
 scale = Vector2(1.6361111, 1.6361111)
 texture = ExtResource("2_e2xbm")

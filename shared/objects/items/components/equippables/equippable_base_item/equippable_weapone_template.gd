@@ -6,7 +6,7 @@ var weapon_item_resource: WeaponItemResource
 
 
 func _ready() -> void:
-	hit_check_marker.position.x += weapon_item_resource.range
+	hit_check_marker.position.x += weapon_item_resource.range_weapon
 
 
 func change_energy() -> void:
@@ -23,7 +23,7 @@ func check_hit() -> void:
 	#line.add_point(to)
 	#line.width = 2.0
 	#line.default_color = Color.RED
-	
+	#
 	#get_tree().current_scene.add_child(line)
 	
 	var space_state := get_world_2d().direct_space_state

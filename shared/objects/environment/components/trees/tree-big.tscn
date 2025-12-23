@@ -40,6 +40,6 @@ position = Vector2(-1.5, -396.5)
 position = Vector2(0, 1)
 polygon = PackedVector2Array(-76, -14, -42, -51, -31, -109, -59, -159, -33, -183, 2, -185, 99, -169, 51, -122, 36, -71, 47, -33, 105, -9, 16, -4, -101, 0)
 
-[node name="TreeBig" type="Sprite2D" parent="." index="3" unique_id=2008177948]
+[node name="TreeBig" type="Sprite2D" parent="WrapperImage" parent_id_path=PackedInt32Array(1623845633) index="0" unique_id=2008177948]
 position = Vector2(-9, -258)
 texture = ExtResource("2_ie3cl")

@@ -18,7 +18,7 @@ var current_resolution := Vector2i(1920, 1080)
 var fullscreen := true
 var borderless := false
 var vsync := true
-var target_fps := 0  # 0 = неограниченно
+var target_fps := 60  # 0 = неограниченно
 
 func _ready() -> void:
 	load_settings()

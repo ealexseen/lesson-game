@@ -1,7 +1,45 @@
-[gd_scene load_steps=3 format=3 uid="uid://ca3o1nkss4id1"]
+[gd_scene load_steps=6 format=3 uid="uid://ca3o1nkss4id1"]
 
 [ext_resource type="Script" uid="uid://chcckjnjola4n" path="res://shared/objects/environment/components/template/hittable_object_template/hittable_object_template.gd" id="1_gv4wk"]
 [ext_resource type="PackedScene" uid="uid://b21j4acvsn5wu" path="res://shared/objects/environment/components/template/hittable_object_template/hitbox/hitbox.tscn" id="2_jfjiq"]
+
+[sub_resource type="Animation" id="Animation_qycar"]
+resource_name = "hit"
+length = 0.5
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("WrapperImage:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(-2, 0), Vector2(2, 0), Vector2(-2, 0), Vector2(2, 0), Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_df1n1"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("WrapperImage:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_df1n1"]
+_data = {
+&"RESET": SubResource("Animation_df1n1"),
+&"hit": SubResource("Animation_qycar")
+}
 
 [node name="HittableObjectTemplate" type="Node2D" unique_id=1335046046]
 script = ExtResource("1_gv4wk")
@@ -15,3 +53,11 @@ unique_name_in_owner = true
 
 [node name="Hitbox" parent="." unique_id=1962271803 instance=ExtResource("2_jfjiq")]
 unique_name_in_owner = true
+
+[node name="WrapperImage" type="Node2D" parent="." unique_id=1623845633]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=968327968]
+unique_name_in_owner = true
+libraries = {
+&"": SubResource("AnimationLibrary_df1n1")
+}

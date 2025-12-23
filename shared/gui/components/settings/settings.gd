@@ -59,7 +59,6 @@ func setup_ui():
 	
 	# FPS ограничения
 	fps_option.clear()
-	fps_option.add_item("Неограниченно", 0)
 	fps_option.add_item("30 FPS", 30)
 	fps_option.add_item("60 FPS", 60)
 	fps_option.add_item("120 FPS", 120)
