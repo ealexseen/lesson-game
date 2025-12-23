@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://y64kuidrk1bi"]
+[gd_scene load_steps=5 format=3 uid="uid://y64kuidrk1bi"]
 
 [ext_resource type="PackedScene" uid="uid://3v4v1b13efak" path="res://shared/gui/components/navigations/navigation_base/navigation_base.tscn" id="1_comr3"]
 [ext_resource type="PackedScene" uid="uid://phdq1kmndagf" path="res://shared/gui/components/buttons/button_exit/button_exit.tscn" id="2_t8pdw"]
+[ext_resource type="PackedScene" uid="uid://yl2hxmyb52i1" path="res://shared/gui/components/buttons/button_settings/button_settings.tscn" id="3_u5xx2"]
 [ext_resource type="PackedScene" uid="uid://dwag858lpck6o" path="res://shared/gui/components/buttons/button_new_game/button_new_game.tscn" id="3_w23qs"]
 
 [node name="Navigation" unique_id=1809149779 instance=ExtResource("1_comr3")]
@@ -13,5 +14,8 @@ offset_bottom = 110.0
 [node name="ButtonNewGame" parent="PanelContainer/VBoxContainer" parent_id_path=PackedInt32Array(465912269) index="1" unique_id=797790867 instance=ExtResource("3_w23qs")]
 layout_mode = 2
 
-[node name="ButtonExit" parent="PanelContainer/VBoxContainer" parent_id_path=PackedInt32Array(465912269) index="2" unique_id=139092568 instance=ExtResource("2_t8pdw")]
+[node name="ButtonSetting" parent="PanelContainer/VBoxContainer" parent_id_path=PackedInt32Array(465912269) index="2" unique_id=139092568 instance=ExtResource("3_u5xx2")]
+layout_mode = 2
+
+[node name="ButtonExit" parent="PanelContainer/VBoxContainer" parent_id_path=PackedInt32Array(465912269) index="3" unique_id=18387321 instance=ExtResource("2_t8pdw")]
 layout_mode = 2

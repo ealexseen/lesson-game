@@ -4,8 +4,9 @@
 [ext_resource type="Texture2D" uid="uid://cweewbsebjxiv" path="res://shared/assets/images/stone.png" id="2_md7pj"]
 
 [node name="StoneItem" unique_id=874065668 instance=ExtResource("1_7jlhu")]
-item_key = 2
-prompt = "Камень"
 
-[node name="TextureRect" parent="." index="1" unique_id=293043908]
+[node name="Pickuppable" parent="." index="0" unique_id=935353379]
+item_key = 3
+
+[node name="TextureRect" parent="Pickuppable" index="1" unique_id=293043908]
 texture = ExtResource("2_md7pj")

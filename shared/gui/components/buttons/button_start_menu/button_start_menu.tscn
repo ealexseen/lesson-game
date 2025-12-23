@@ -4,5 +4,5 @@
 [ext_resource type="Script" uid="uid://b34a2c2b8qbl" path="res://shared/gui/components/buttons/button_start_menu/button_start_menu.gd" id="2_pl6l0"]
 
 [node name="ButtonStartMenu" unique_id=139092568 instance=ExtResource("1_cf48v")]
-text = "Menu"
+text = "Главное Меню"
 script = ExtResource("2_pl6l0")

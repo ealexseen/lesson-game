@@ -5,5 +5,5 @@
 
 [node name="PlantItem" unique_id=874065668 instance=ExtResource("1_fs6r7")]
 
-[node name="TextureRect" parent="." index="1" unique_id=293043908]
+[node name="TextureRect" parent="Pickuppable" parent_id_path=PackedInt32Array(935353379) index="1" unique_id=293043908]
 texture = ExtResource("2_fobox")

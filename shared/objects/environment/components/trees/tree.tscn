@@ -1,0 +1,33 @@
+[gd_scene load_steps=4 format=3 uid="uid://bqxk88ib4y4cb"]
+
+[ext_resource type="PackedScene" uid="uid://ca3o1nkss4id1" path="res://shared/objects/environment/components/template/hittable_object_template/hittable_object_template.tscn" id="1_yehse"]
+[ext_resource type="Texture2D" uid="uid://dthk2mlvdqcs3" path="res://shared/assets/images/tree.png" id="2_e2xbm"]
+[ext_resource type="Resource" uid="uid://cxb3um3715tul" path="res://shared/objects/environment/resources/tree_attributes.tres" id="2_qycar"]
+
+[node name="Tree" unique_id=1335046046 instance=ExtResource("1_yehse")]
+attributes = ExtResource("2_qycar")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" parent_id_path=PackedInt32Array(194205188) index="0" unique_id=1519564468]
+polygon = PackedVector2Array(-1, -277, 142, -280, 182, -382, 147, -501, 79, -537, -58, -538, -179, -496, -229, -436, -207, -357, -211, -305, -216, -271, -190, -233, -159, -228, -77, -271)
+
+[node name="Marker2D" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="0" unique_id=750583480]
+position = Vector2(-14, -226)
+rotation = 1.5707964
+
+[node name="Marker2D2" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="1" unique_id=1845692553]
+position = Vector2(-16, -162)
+rotation = 1.5707964
+
+[node name="Marker2D3" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="2" unique_id=330678020]
+position = Vector2(-16, -98)
+rotation = 1.5707964
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Hitbox" parent_id_path=PackedInt32Array(1962271803) index="0" unique_id=2061018382]
+build_mode = 1
+polygon = PackedVector2Array(8, -33, 3, -63, 5, -113, 7, -199, 0, -242, -4, -277, -26, -287, -56, -274, -39, -252, -28, -231, -30, -139, -32, -100, -26, -76, -34, -40, -35, -15, 7, -13)
+
+[node name="Tree" type="Sprite2D" parent="." index="3" unique_id=482665220]
+z_index = 1
+position = Vector2(-2.2888184e-05, -293.99997)
+scale = Vector2(1.6361111, 1.6361111)
+texture = ExtResource("2_e2xbm")

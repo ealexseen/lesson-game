@@ -21,6 +21,16 @@ func _enter_tree() -> void:
 	EventSystem.INV_switch_two_item_indexes.connect(_on_change_order)
 	EventSystem.INV_add_item.connect(_on_add_item)
 	EventSystem.INV_remove_items.connect(_on_remove_items)
+	EventSystem.INV_delete_item_by_index.connect(on_delete_item_by_index)
+
+
+func on_delete_item_by_index(index: int, is_in_hotbar: bool) -> void:
+	if is_in_hotbar:
+		hotbar[index] = null
+		EventSystem.INV_hotbar_updated.emit(hotbar)
+	else:
+		inventory[index] = null
+		EventSystem.INV_inventory_updated.emit(inventory)
 
 
 func _ready() -> void:

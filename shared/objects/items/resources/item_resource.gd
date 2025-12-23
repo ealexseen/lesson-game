@@ -6,8 +6,9 @@ class_name ItemResource extends Resource
 @export_multiline var description := ''
 @export var is_equippable := false # оснащаемый
 
+
 func get_description() -> String:
-	return "%s \n %s" % [
+	return "%s\n%s" % [
 		display_name,
 		description
 	]

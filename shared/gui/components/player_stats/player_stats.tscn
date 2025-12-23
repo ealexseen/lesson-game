@@ -1,0 +1,70 @@
+[gd_scene load_steps=3 format=3 uid="uid://bhcwwjjop01sr"]
+
+[ext_resource type="Script" uid="uid://bc82jibgqlnfc" path="res://shared/gui/components/player_stats/player_stats.gd" id="1_an3jh"]
+[ext_resource type="Texture2D" uid="uid://kfjb4t5k0sbg" path="res://shared/assets/images/kenney_prototype_textures/light/texture_01.png" id="1_fs74k"]
+
+[node name="PlayerStatsContainer" type="VBoxContainer" unique_id=529086088]
+z_index = -2
+z_as_relative = false
+offset_top = -1.0
+offset_right = 179.0
+offset_bottom = 82.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 7
+script = ExtResource("1_an3jh")
+
+[node name="EnergyContainer" type="HBoxContainer" parent="." unique_id=676599635]
+layout_mode = 2
+
+[node name="EnergyBar" type="TextureProgressBar" parent="EnergyContainer" unique_id=1430061849]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 20)
+layout_mode = 2
+step = 0.1
+nine_patch_stretch = true
+texture_under = ExtResource("1_fs74k")
+texture_progress = ExtResource("1_fs74k")
+tint_under = Color(0.20392157, 0.20392157, 0.20392157, 1)
+tint_progress = Color(1, 0.7607843, 0.36078432, 1)
+
+[node name="Label" type="Label" parent="EnergyContainer" unique_id=62093268]
+layout_mode = 2
+text = "SP"
+
+[node name="HealthContainer" type="HBoxContainer" parent="." unique_id=1471994401]
+layout_mode = 2
+
+[node name="HealthBar" type="TextureProgressBar" parent="HealthContainer" unique_id=1311757958]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 20)
+layout_mode = 2
+step = 0.1
+nine_patch_stretch = true
+texture_under = ExtResource("1_fs74k")
+texture_progress = ExtResource("1_fs74k")
+tint_under = Color(0.20392157, 0.20392157, 0.20392157, 1)
+tint_progress = Color(0.8203125, 0.37490845, 0.3907216, 1)
+
+[node name="Label" type="Label" parent="HealthContainer" unique_id=1520836358]
+layout_mode = 2
+text = "HP"
+
+[node name="ManaContainer" type="HBoxContainer" parent="." unique_id=648196724]
+layout_mode = 2
+
+[node name="ManaBar" type="TextureProgressBar" parent="ManaContainer" unique_id=1220540636]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 20)
+layout_mode = 2
+step = 0.1
+nine_patch_stretch = true
+texture_under = ExtResource("1_fs74k")
+texture_progress = ExtResource("1_fs74k")
+tint_under = Color(0.20392157, 0.20392157, 0.20392157, 1)
+tint_progress = Color(0.043137256, 0.3647059, 0.75686276, 1)
+
+[node name="Label" type="Label" parent="ManaContainer" unique_id=1222592490]
+layout_mode = 2
+text = "MP"

@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://bgllyr4dxpr28"]
+[gd_scene load_steps=8 format=3 uid="uid://bgllyr4dxpr28"]
 
 [ext_resource type="Texture2D" uid="uid://osa1wgyqn5ax" path="res://shared/assets/images/icon.svg" id="1_oul6g"]
 [ext_resource type="Script" uid="uid://bqrrx5yf5tnkq" path="res://shared/objects/player/player.gd" id="1_rkbax"]
@@ -6,11 +6,12 @@
 [ext_resource type="PackedScene" uid="uid://cp3p55xisn3sh" path="res://shared/objects/player/equippable_item_holder/equippable_item_holder.tscn" id="3_xkryw"]
 [ext_resource type="PackedScene" uid="uid://hhv0gs0voudq" path="res://shared/gui/components/player_menu/managers/manager_inventory/manager_inventory.tscn" id="4_jnjyq"]
 [ext_resource type="PackedScene" uid="uid://bb6yyqqcchsnt" path="res://shared/gui/components/hot_bar/managers/equipped_item_manager/equipped_item_manager.tscn" id="5_gnkmh"]
+[ext_resource type="PackedScene" uid="uid://cyhy8e7ejrbbb" path="res://shared/objects/player/managers/player_stats_manager/player_stats_manager.tscn" id="7_8bsna"]
 
 [node name="Player" type="CharacterBody2D" unique_id=1070709042]
 process_mode = 1
 z_index = 1
-collision_mask = 26
+collision_mask = 666
 script = ExtResource("1_rkbax")
 
 [node name="Icon" type="Sprite2D" parent="." unique_id=3232867]
@@ -35,3 +36,5 @@ player = NodePath("../..")
 [node name="ManagerInventory" parent="Managers" unique_id=572309664 instance=ExtResource("4_jnjyq")]
 
 [node name="EquippedItemManager" parent="Managers" unique_id=877364062 instance=ExtResource("5_gnkmh")]
+
+[node name="PlayerStatsManager" parent="Managers" unique_id=552642303 instance=ExtResource("7_8bsna")]

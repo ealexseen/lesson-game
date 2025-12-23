@@ -4,5 +4,5 @@
 [ext_resource type="Script" uid="uid://drtms5aalqxe2" path="res://shared/gui/components/buttons/button_exit/button_exit.gd" id="2_almo0"]
 
 [node name="ButtonExit" unique_id=139092568 instance=ExtResource("1_evw5x")]
-text = "Exit"
+text = "Выход"
 script = ExtResource("2_almo0")

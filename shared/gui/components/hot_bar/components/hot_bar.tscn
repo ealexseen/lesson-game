@@ -3,61 +3,50 @@
 [ext_resource type="Script" uid="uid://mh6gbs2dugih" path="res://shared/gui/components/hot_bar/components/hot_bar.gd" id="1_7k65j"]
 [ext_resource type="PackedScene" uid="uid://cavlrm7as0c8k" path="res://shared/gui/components/inventory_slot/hotbar_slot/hotbar_slot.tscn" id="2_46pdj"]
 
-[node name="ActionBar" type="MarginContainer" unique_id=6077305]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="HotBar" type="PanelContainer" unique_id=1412941802]
+offset_right = 740.0
+offset_bottom = 100.0
 size_flags_horizontal = 4
 size_flags_vertical = 8
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
+mouse_filter = 1
 script = ExtResource("1_7k65j")
 
-[node name="PanelContainer" type="PanelContainer" parent="." unique_id=1412941802]
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 8
-
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=1229964985]
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1229964985]
 layout_mode = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer" unique_id=1817355029]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer" unique_id=1817355029]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 20
 alignment = 1
 
-[node name="HotbarSlot" parent="PanelContainer/MarginContainer/HBoxContainer" unique_id=105334727 instance=ExtResource("2_46pdj")]
+[node name="HotbarSlot" parent="MarginContainer/HBoxContainer" unique_id=105334727 instance=ExtResource("2_46pdj")]
 layout_mode = 2
 
-[node name="HotbarSlot2" parent="PanelContainer/MarginContainer/HBoxContainer" unique_id=1939510476 instance=ExtResource("2_46pdj")]
+[node name="HotbarSlot2" parent="MarginContainer/HBoxContainer" unique_id=1939510476 instance=ExtResource("2_46pdj")]
 layout_mode = 2
 
-[node name="HotbarSlot3" parent="PanelContainer/MarginContainer/HBoxContainer" unique_id=76594132 instance=ExtResource("2_46pdj")]
+[node name="HotbarSlot3" parent="MarginContainer/HBoxContainer" unique_id=76594132 instance=ExtResource("2_46pdj")]
 layout_mode = 2
 
-[node name="HotbarSlot4" parent="PanelContainer/MarginContainer/HBoxContainer" unique_id=1590588487 instance=ExtResource("2_46pdj")]
+[node name="HotbarSlot4" parent="MarginContainer/HBoxContainer" unique_id=1590588487 instance=ExtResource("2_46pdj")]
 layout_mode = 2
 
-[node name="HotbarSlot5" parent="PanelContainer/MarginContainer/HBoxContainer" unique_id=1639719434 instance=ExtResource("2_46pdj")]
+[node name="HotbarSlot5" parent="MarginContainer/HBoxContainer" unique_id=1639719434 instance=ExtResource("2_46pdj")]
 layout_mode = 2
 
-[node name="HotbarSlot6" parent="PanelContainer/MarginContainer/HBoxContainer" unique_id=914368996 instance=ExtResource("2_46pdj")]
+[node name="HotbarSlot6" parent="MarginContainer/HBoxContainer" unique_id=914368996 instance=ExtResource("2_46pdj")]
 layout_mode = 2
 
-[node name="HotbarSlot7" parent="PanelContainer/MarginContainer/HBoxContainer" unique_id=1265857484 instance=ExtResource("2_46pdj")]
+[node name="HotbarSlot7" parent="MarginContainer/HBoxContainer" unique_id=1265857484 instance=ExtResource("2_46pdj")]
 layout_mode = 2
 
-[node name="HotbarSlot8" parent="PanelContainer/MarginContainer/HBoxContainer" unique_id=970134475 instance=ExtResource("2_46pdj")]
+[node name="HotbarSlot8" parent="MarginContainer/HBoxContainer" unique_id=970134475 instance=ExtResource("2_46pdj")]
 layout_mode = 2
 
-[node name="HotbarSlot9" parent="PanelContainer/MarginContainer/HBoxContainer" unique_id=1481472717 instance=ExtResource("2_46pdj")]
+[node name="HotbarSlot9" parent="MarginContainer/HBoxContainer" unique_id=1481472717 instance=ExtResource("2_46pdj")]
 layout_mode = 2

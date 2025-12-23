@@ -7,7 +7,13 @@ var hotbar: Array = []
 func _enter_tree() -> void:
 	EventSystem.INV_hotbar_updated.connect(on_hotbar_updated)
 	EventSystem.EQU_hotkey_pressed.connect(on_hotkey_pressed)
+	EventSystem.EQU_delete_equiped_item.connect(on_delete_equiped_item)
 
+
+func on_delete_equiped_item() -> void:
+	EventSystem.INV_delete_item_by_index.emit(active_hotbar_slot, true)
+	EventSystem.EQU_active_hotbar_slot_updated.emit(null)
+	active_hotbar_slot = null
 
 func on_hotbar_updated(_hotbar: Array) -> void:
 	hotbar = _hotbar

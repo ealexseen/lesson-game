@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://dism1ib5lncje"]
+[gd_scene load_steps=14 format=3 uid="uid://dism1ib5lncje"]
 
 [ext_resource type="PackedScene" uid="uid://bgllyr4dxpr28" path="res://shared/objects/player/player.tscn" id="2_isi4y"]
 [ext_resource type="PackedScene" uid="uid://c4x0b611n6lxw" path="res://shared/objects/bullet/bullet.tscn" id="3_iat4p"]
@@ -9,6 +9,10 @@
 [ext_resource type="PackedScene" uid="uid://dsds4eomuellf" path="res://shared/objects/items/components/items/stone_item/stone_item.tscn" id="7_iat4p"]
 [ext_resource type="PackedScene" uid="uid://bf1b1hhnhk5t0" path="res://shared/objects/items/components/items/crystal_item/crystal_item.tscn" id="8_bpow0"]
 [ext_resource type="PackedScene" uid="uid://7fhkcqcybn36" path="res://shared/objects/items/components/items/plant_item/plant_item.tscn" id="9_534y3"]
+[ext_resource type="PackedScene" uid="uid://bqxk88ib4y4cb" path="res://shared/objects/environment/components/trees/tree.tscn" id="9_ki8k1"]
+[ext_resource type="PackedScene" uid="uid://dyhgv3ymn0cwn" path="res://shared/objects/items/managers/manager_spawner/manager_spawner.tscn" id="11_pifw4"]
+[ext_resource type="PackedScene" uid="uid://dg28jyvf3qpuv" path="res://shared/objects/environment/components/trees/tree-big.tscn" id="12_je6cb"]
+[ext_resource type="PackedScene" uid="uid://deueoe8ohbch4" path="res://shared/objects/items/components/items/mushroom_item/mushroom_item.tscn" id="13_rqrgr"]
 
 [node name="StageController" type="Node" unique_id=1375411740]
 
@@ -75,7 +79,7 @@ position = Vector2(484, 248)
 position = Vector2(1497, 248)
 
 [node name="StickItem" parent="Items" unique_id=906241322 instance=ExtResource("6_isi4y")]
-position = Vector2(-450, 236)
+position = Vector2(586, 234)
 
 [node name="StickItem4" parent="Items" unique_id=1950108716 instance=ExtResource("6_isi4y")]
 position = Vector2(-208, 237)
@@ -93,7 +97,7 @@ position = Vector2(1247, 237)
 position = Vector2(3410, 241)
 
 [node name="StoneItem4" parent="Items" unique_id=1150923101 instance=ExtResource("7_iat4p")]
-position = Vector2(6056, 241)
+position = Vector2(6310, 243)
 
 [node name="StoneItem3" parent="Items" unique_id=259830924 instance=ExtResource("7_iat4p")]
 position = Vector2(1739, 237)
@@ -107,23 +111,174 @@ position = Vector2(5478, 241)
 [node name="BaseItem3" parent="Items" unique_id=1950848618 instance=ExtResource("8_bpow0")]
 position = Vector2(5279, 242)
 
-[node name="PlantItem" parent="." unique_id=686401691 instance=ExtResource("9_534y3")]
+[node name="PlantItem" parent="Items" unique_id=686401691 instance=ExtResource("9_534y3")]
 position = Vector2(216, 240)
 
-[node name="PlantItem2" parent="." unique_id=491140354 instance=ExtResource("9_534y3")]
+[node name="PlantItem2" parent="Items" unique_id=491140354 instance=ExtResource("9_534y3")]
 position = Vector2(367, 240)
 
-[node name="PlantItem3" parent="." unique_id=1627475585 instance=ExtResource("9_534y3")]
+[node name="PlantItem3" parent="Items" unique_id=1627475585 instance=ExtResource("9_534y3")]
 position = Vector2(1366, 241)
 
-[node name="PlantItem4" parent="." unique_id=1519774895 instance=ExtResource("9_534y3")]
+[node name="PlantItem4" parent="Items" unique_id=1519774895 instance=ExtResource("9_534y3")]
 position = Vector2(2335, 241)
 
-[node name="PlantItem7" parent="." unique_id=1313785040 instance=ExtResource("9_534y3")]
+[node name="PlantItem7" parent="Items" unique_id=1313785040 instance=ExtResource("9_534y3")]
 position = Vector2(2047, 241)
 
-[node name="PlantItem5" parent="." unique_id=2002065624 instance=ExtResource("9_534y3")]
+[node name="PlantItem5" parent="Items" unique_id=2002065624 instance=ExtResource("9_534y3")]
 position = Vector2(4826, 241)
 
-[node name="PlantItem6" parent="." unique_id=669602440 instance=ExtResource("9_534y3")]
+[node name="PlantItem6" parent="Items" unique_id=669602440 instance=ExtResource("9_534y3")]
 position = Vector2(4082, 241)
+
+[node name="env" type="Node" parent="." unique_id=13197996]
+
+[node name="Tree" parent="env" unique_id=1335046046 instance=ExtResource("9_ki8k1")]
+position = Vector2(-462, 294)
+
+[node name="Tree2" parent="env" unique_id=452080020 instance=ExtResource("9_ki8k1")]
+position = Vector2(2634, 294)
+
+[node name="Tree3" parent="env" unique_id=1405007487 instance=ExtResource("9_ki8k1")]
+position = Vector2(3738, 294)
+
+[node name="Tree6" parent="env" unique_id=1582951908 instance=ExtResource("9_ki8k1")]
+position = Vector2(5986, 294)
+
+[node name="Tree7" parent="env" unique_id=1131428948 instance=ExtResource("9_ki8k1")]
+position = Vector2(7764, 294)
+
+[node name="Tree10" parent="env" unique_id=1082477113 instance=ExtResource("9_ki8k1")]
+position = Vector2(9829, 294)
+
+[node name="TreeBig" parent="env" unique_id=1710892198 instance=ExtResource("12_je6cb")]
+position = Vector2(4973, 279)
+
+[node name="TreeBig3" parent="env" unique_id=1939871538 instance=ExtResource("12_je6cb")]
+position = Vector2(10777, 279)
+
+[node name="TreeBig4" parent="env" unique_id=775178427 instance=ExtResource("12_je6cb")]
+position = Vector2(8880, 279)
+
+[node name="TreeBig2" parent="env" unique_id=1790483148 instance=ExtResource("12_je6cb")]
+position = Vector2(1652, 279)
+
+[node name="ManagerSpawner" parent="." unique_id=1392259211 instance=ExtResource("11_pifw4")]
+
+[node name="MushroomItem" parent="." unique_id=251111655 instance=ExtResource("13_rqrgr")]
+position = Vector2(-470, 267)
+
+[node name="MushroomItem3" parent="." unique_id=893899136 instance=ExtResource("13_rqrgr")]
+position = Vector2(-430.99997, 268)
+
+[node name="MushroomItem2" parent="." unique_id=1852814211 instance=ExtResource("13_rqrgr")]
+position = Vector2(-547, 265)
+
+[node name="MushroomItem4" parent="." unique_id=2077520174 instance=ExtResource("13_rqrgr")]
+position = Vector2(1636, 265)
+
+[node name="MushroomItem5" parent="." unique_id=892032114 instance=ExtResource("13_rqrgr")]
+position = Vector2(1675, 266)
+
+[node name="MushroomItem6" parent="." unique_id=168779577 instance=ExtResource("13_rqrgr")]
+position = Vector2(1559, 263)
+
+[node name="MushroomItem7" parent="." unique_id=2065754476 instance=ExtResource("13_rqrgr")]
+position = Vector2(2629, 265)
+
+[node name="MushroomItem8" parent="." unique_id=1281292716 instance=ExtResource("13_rqrgr")]
+position = Vector2(2668, 266)
+
+[node name="MushroomItem9" parent="." unique_id=803652410 instance=ExtResource("13_rqrgr")]
+position = Vector2(2552, 263)
+
+[node name="MushroomItem10" parent="." unique_id=1343080262 instance=ExtResource("13_rqrgr")]
+position = Vector2(3725, 265)
+
+[node name="MushroomItem11" parent="." unique_id=1649731856 instance=ExtResource("13_rqrgr")]
+position = Vector2(3764, 266)
+
+[node name="MushroomItem12" parent="." unique_id=2114258535 instance=ExtResource("13_rqrgr")]
+position = Vector2(3648, 263)
+
+[node name="MushroomItem13" parent="." unique_id=263702524 instance=ExtResource("13_rqrgr")]
+position = Vector2(4897, 265)
+
+[node name="MushroomItem14" parent="." unique_id=56479990 instance=ExtResource("13_rqrgr")]
+position = Vector2(4936, 266)
+
+[node name="MushroomItem15" parent="." unique_id=381666157 instance=ExtResource("13_rqrgr")]
+position = Vector2(4820, 263)
+
+[node name="MushroomItem16" parent="." unique_id=196838993 instance=ExtResource("13_rqrgr")]
+position = Vector2(5074, 265)
+
+[node name="MushroomItem17" parent="." unique_id=1452228987 instance=ExtResource("13_rqrgr")]
+position = Vector2(5113, 266)
+
+[node name="MushroomItem18" parent="." unique_id=656771847 instance=ExtResource("13_rqrgr")]
+position = Vector2(4997, 263)
+
+[node name="MushroomItem19" parent="." unique_id=1103112367 instance=ExtResource("13_rqrgr")]
+position = Vector2(5989, 265)
+
+[node name="MushroomItem20" parent="." unique_id=1356098971 instance=ExtResource("13_rqrgr")]
+position = Vector2(6028, 266)
+
+[node name="MushroomItem21" parent="." unique_id=1976965318 instance=ExtResource("13_rqrgr")]
+position = Vector2(5912, 263)
+
+[node name="MushroomItem22" parent="." unique_id=2092568224 instance=ExtResource("13_rqrgr")]
+position = Vector2(7767, 265)
+
+[node name="MushroomItem23" parent="." unique_id=372766255 instance=ExtResource("13_rqrgr")]
+position = Vector2(7806, 266)
+
+[node name="MushroomItem24" parent="." unique_id=1523495005 instance=ExtResource("13_rqrgr")]
+position = Vector2(7690, 263)
+
+[node name="MushroomItem25" parent="." unique_id=565917092 instance=ExtResource("13_rqrgr")]
+position = Vector2(8764, 265)
+
+[node name="MushroomItem26" parent="." unique_id=1488634465 instance=ExtResource("13_rqrgr")]
+position = Vector2(8803, 266)
+
+[node name="MushroomItem27" parent="." unique_id=1582652944 instance=ExtResource("13_rqrgr")]
+position = Vector2(8687, 263)
+
+[node name="MushroomItem28" parent="." unique_id=1625204377 instance=ExtResource("13_rqrgr")]
+position = Vector2(9002, 265)
+
+[node name="MushroomItem29" parent="." unique_id=1697230222 instance=ExtResource("13_rqrgr")]
+position = Vector2(9041, 266)
+
+[node name="MushroomItem30" parent="." unique_id=296007073 instance=ExtResource("13_rqrgr")]
+position = Vector2(8925, 263)
+
+[node name="MushroomItem31" parent="." unique_id=171843424 instance=ExtResource("13_rqrgr")]
+position = Vector2(9825, 265)
+
+[node name="MushroomItem32" parent="." unique_id=2145610286 instance=ExtResource("13_rqrgr")]
+position = Vector2(9864, 266)
+
+[node name="MushroomItem33" parent="." unique_id=592102921 instance=ExtResource("13_rqrgr")]
+position = Vector2(9748, 263)
+
+[node name="MushroomItem34" parent="." unique_id=1127734972 instance=ExtResource("13_rqrgr")]
+position = Vector2(10617, 265)
+
+[node name="MushroomItem35" parent="." unique_id=1032921502 instance=ExtResource("13_rqrgr")]
+position = Vector2(10656, 266)
+
+[node name="MushroomItem36" parent="." unique_id=1285980163 instance=ExtResource("13_rqrgr")]
+position = Vector2(10540, 263)
+
+[node name="MushroomItem37" parent="." unique_id=1843079578 instance=ExtResource("13_rqrgr")]
+position = Vector2(10931, 265)
+
+[node name="MushroomItem38" parent="." unique_id=1856175647 instance=ExtResource("13_rqrgr")]
+position = Vector2(10970, 266)
+
+[node name="MushroomItem39" parent="." unique_id=420791498 instance=ExtResource("13_rqrgr")]
+position = Vector2(10854, 263)

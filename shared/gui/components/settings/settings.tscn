@@ -1,0 +1,223 @@
+[gd_scene load_steps=3 format=3 uid="uid://c7nu2u8dxyrqj"]
+
+[ext_resource type="Script" uid="uid://cvscvgxrk7k44" path="res://shared/gui/components/settings/settings.gd" id="1_su5g3"]
+[ext_resource type="Theme" uid="uid://due8olnny4q8h" path="res://shared/theme/theme.tres" id="2_1fprj"]
+
+[node name="Settings" type="MarginContainer" unique_id=147333781]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_su5g3")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=1031450862]
+custom_minimum_size = Vector2(700, 510)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme = ExtResource("2_1fprj")
+theme_type_variation = &"PanelContainerMetal"
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=2107339132]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer" unique_id=1307071374]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=664234091]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Настройки"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VScrollBar" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=2013968679]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar" unique_id=828007273]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ResolutionPanel" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer" unique_id=1588277187]
+layout_mode = 2
+theme = ExtResource("2_1fprj")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/ResolutionPanel" unique_id=807323732]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/ResolutionPanel/MarginContainer" unique_id=1331187081]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/ResolutionPanel/MarginContainer/HboxContainer" unique_id=594072853]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Разрешение"
+
+[node name="ResolutionOption" type="OptionButton" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/ResolutionPanel/MarginContainer/HboxContainer" unique_id=1334391042]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FPSPanel" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer" unique_id=1285481243]
+layout_mode = 2
+theme = ExtResource("2_1fprj")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/FPSPanel" unique_id=878331884]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/FPSPanel/MarginContainer" unique_id=1600568047]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/FPSPanel/MarginContainer/HboxContainer" unique_id=1020567036]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "FPS"
+
+[node name="FPSOption" type="OptionButton" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/FPSPanel/MarginContainer/HboxContainer" unique_id=1867065523]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FullscreenPanel" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer" unique_id=2023085801]
+layout_mode = 2
+theme = ExtResource("2_1fprj")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/FullscreenPanel" unique_id=755486056]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/FullscreenPanel/MarginContainer" unique_id=1762087578]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/FullscreenPanel/MarginContainer/HboxContainer" unique_id=1065931900]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Полноэкранный режим"
+
+[node name="FullscreenCheck" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/FullscreenPanel/MarginContainer/HboxContainer" unique_id=1903445569]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BorderlessPanel" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer" unique_id=1822142643]
+layout_mode = 2
+theme = ExtResource("2_1fprj")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/BorderlessPanel" unique_id=1641872240]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/BorderlessPanel/MarginContainer" unique_id=558275710]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/BorderlessPanel/MarginContainer/HboxContainer" unique_id=702213791]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Безрамочный режим"
+
+[node name="BorderlessCheck" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/BorderlessPanel/MarginContainer/HboxContainer" unique_id=427273469]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VSyncPanel" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer" unique_id=616630]
+layout_mode = 2
+theme = ExtResource("2_1fprj")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/VSyncPanel" unique_id=753575877]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/VSyncPanel/MarginContainer" unique_id=1258516392]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/VSyncPanel/MarginContainer/HboxContainer" unique_id=1804916495]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Вертикальная синхронизация"
+
+[node name="VSyncCheck" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/VSyncPanel/MarginContainer/HboxContainer" unique_id=2068616082]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Buttons" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer" unique_id=1809966855]
+layout_mode = 2
+theme = ExtResource("2_1fprj")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/Buttons" unique_id=1458809981]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/Buttons/MarginContainer" unique_id=655346005]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MessageLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/Buttons/MarginContainer/HboxContainer" unique_id=1210030158]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="WrapperButton" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/Buttons/MarginContainer/HboxContainer" unique_id=562041939]
+layout_mode = 2
+size_flags_horizontal = 10
+theme = ExtResource("2_1fprj")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="ApplyButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/Buttons/MarginContainer/HboxContainer/WrapperButton" unique_id=2076752039]
+unique_name_in_owner = true
+layout_mode = 2
+theme = ExtResource("2_1fprj")
+theme_type_variation = &"NewGameButton"
+text = "Применить"
+
+[node name="ResetButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/Buttons/MarginContainer/HboxContainer/WrapperButton" unique_id=1161081483]
+unique_name_in_owner = true
+layout_mode = 2
+theme = ExtResource("2_1fprj")
+theme_type_variation = &"NewGameButton"
+text = "Сброс"
+
+[node name="BackButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/VScrollBar/VBoxContainer/Buttons/MarginContainer/HboxContainer/WrapperButton" unique_id=2024112913]
+unique_name_in_owner = true
+layout_mode = 2
+theme = ExtResource("2_1fprj")
+theme_type_variation = &"NewGameButton"
+text = "Назад"

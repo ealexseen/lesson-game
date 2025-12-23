@@ -1,4 +1,4 @@
-class_name ActionBar extends MarginContainer
+class_name HotBar extends PanelContainer
 
 @onready var h_box_container: HBoxContainer = %HBoxContainer
 

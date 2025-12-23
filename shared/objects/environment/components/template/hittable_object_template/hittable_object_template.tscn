@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://ca3o1nkss4id1"]
+
+[ext_resource type="Script" uid="uid://chcckjnjola4n" path="res://shared/objects/environment/components/template/hittable_object_template/hittable_object_template.gd" id="1_gv4wk"]
+[ext_resource type="PackedScene" uid="uid://b21j4acvsn5wu" path="res://shared/objects/environment/components/template/hittable_object_template/hitbox/hitbox.tscn" id="2_jfjiq"]
+
+[node name="HittableObjectTemplate" type="Node2D" unique_id=1335046046]
+script = ExtResource("1_gv4wk")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=194205188]
+collision_layer = 512
+collision_mask = 0
+
+[node name="ItemSpawnPoints" type="Node2D" parent="." unique_id=1542743920]
+unique_name_in_owner = true
+
+[node name="Hitbox" parent="." unique_id=1962271803 instance=ExtResource("2_jfjiq")]
+unique_name_in_owner = true

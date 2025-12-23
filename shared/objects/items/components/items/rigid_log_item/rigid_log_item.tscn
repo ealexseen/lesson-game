@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3 uid="uid://brxari61oplhx"]
+
+[ext_resource type="PackedScene" uid="uid://dyr7m3mhu3sfb" path="res://shared/objects/items/components/items/base_item/rigid_base_item.tscn" id="1_d5my1"]
+[ext_resource type="Texture2D" uid="uid://cwgtc6scunr4" path="res://shared/assets/images/log.png" id="2_dny7a"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_tbr3f"]
+radius = 13.0
+height = 72.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_dny7a"]
+radius = 13.0
+height = 72.0
+
+[node name="RigidLogItem" unique_id=1617777290 instance=ExtResource("1_d5my1")]
+rotation = 1.5707964
+collision_layer = 256
+collision_mask = 898
+
+[node name="Pickuppable" parent="." index="0" unique_id=935353379]
+item_key = 7
+
+[node name="PointPrompt" parent="Pickuppable" index="0" unique_id=467469272]
+position = Vector2(-49, 2.1418582e-06)
+
+[node name="TextureRect" parent="Pickuppable" index="1" unique_id=293043908]
+offset_top = -41.0
+offset_bottom = 39.0
+texture = ExtResource("2_dny7a")
+
+[node name="CollisionShape2D" parent="Pickuppable" index="2" unique_id=1046201066]
+position = Vector2(-1, 2)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_tbr3f")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." index="1" unique_id=270852094]
+position = Vector2(-1, 2)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_dny7a")
+debug_color = Color(0.53195465, 0, 0.70196074, 0.41960785)

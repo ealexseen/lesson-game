@@ -17,7 +17,5 @@ func on_ui_check_count(_count: int) -> void:
 
 	
 func _open_menu(value: bool) -> void:
-	#get_tree().paused = value
-	
 	cursor_game.visible = !value
 	cursor_menu.visible = value

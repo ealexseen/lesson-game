@@ -1,14 +1,10 @@
-[gd_resource type="Theme" load_steps=24 format=3 uid="uid://due8olnny4q8h"]
+[gd_resource type="Theme" load_steps=25 format=3 uid="uid://due8olnny4q8h"]
 
 [ext_resource type="FontFile" uid="uid://kwmqiai2u63n" path="res://shared/assets/font/Raleway/static/Raleway-MediumItalic.ttf" id="1_jf26r"]
 [ext_resource type="FontFile" uid="uid://cwciwew2ncfin" path="res://shared/assets/font/Raleway/static/Raleway-BoldItalic.ttf" id="2_jf26r"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3eepq"]
-content_margin_left = 10.0
-content_margin_top = 10.0
-content_margin_right = 10.0
-content_margin_bottom = 10.0
-bg_color = Color(0.28118682, 0.2811869, 0.28118676, 1)
+[sub_resource type="FontVariation" id="FontVariation_wktad"]
+base_font = ExtResource("1_jf26r")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7any1"]
 bg_color = Color(0.6, 0.6, 0.6, 0.11764706)
@@ -24,11 +20,8 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[sub_resource type="FontVariation" id="FontVariation_jf26r"]
+[sub_resource type="FontVariation" id="FontVariation_8rsjb"]
 base_font = ExtResource("2_jf26r")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iqtc0"]
-bg_color = Color(0.6, 0.6, 0.6, 0)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hi5w6"]
 content_margin_left = 10.0
@@ -73,6 +66,23 @@ corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wktad"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.85550916, 0.49770916, 5.7756904e-07, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.288518, 0.288518, 0.2885178, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+corner_detail = 10
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fjif0"]
 content_margin_left = 10.0
@@ -267,20 +277,33 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uofrm"]
+bg_color = Color(0.972549, 0.80784315, 0.8, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.9411765, 0.5686275, 0.10980392, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+corner_detail = 20
+anti_aliasing_size = 0.204
+
 [resource]
-Button/fonts/font = ExtResource("1_jf26r")
-Button/styles/normal = SubResource("StyleBoxFlat_3eepq")
+Button/fonts/font = SubResource("FontVariation_wktad")
 ButtonCrafting/base_type = &"Button"
 ButtonCrafting/styles/hover = SubResource("StyleBoxFlat_7any1")
 ButtonCrafting/styles/normal = SubResource("StyleBoxFlat_3fgq6")
-Label/fonts/font = SubResource("FontVariation_jf26r")
-Label/styles/normal = SubResource("StyleBoxFlat_iqtc0")
+Label/fonts/font = SubResource("FontVariation_8rsjb")
 MyCustomButton/base_type = &"Button"
 MyCustomButton/styles/hover = SubResource("StyleBoxFlat_hi5w6")
 MyCustomButton/styles/normal = SubResource("StyleBoxFlat_rap6d")
 MyCustomButton/styles/pressed = SubResource("StyleBoxFlat_ccfid")
 MyCustomButton/styles/pressed_mirrored = SubResource("StyleBoxFlat_20a1y")
 NewGameButton/base_type = &"Button"
+NewGameButton/styles/disabled = SubResource("StyleBoxFlat_wktad")
 NewGameButton/styles/focus = SubResource("StyleBoxFlat_fjif0")
 NewGameButton/styles/hover = SubResource("StyleBoxFlat_k31cg")
 NewGameButton/styles/hover_mirrored = SubResource("StyleBoxFlat_wex2c")
@@ -296,4 +319,6 @@ PanelContainerDefault/base_type = &"PanelContainer"
 PanelContainerDefault/styles/panel = SubResource("StyleBoxFlat_jf26r")
 PanelContainerMetal/base_type = &"PanelContainer"
 PanelContainerMetal/styles/panel = SubResource("StyleBoxFlat_y5ki2")
+PanelContainerTest/base_type = &"PanelContainer"
+PanelContainerTest/styles/panel = SubResource("StyleBoxFlat_uofrm")
 VBoxContainer/constants/separation = 10

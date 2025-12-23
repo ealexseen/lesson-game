@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ConsumableItemResource" load_steps=3 format=3 uid="uid://6oth2l0j44sg"]
+
+[ext_resource type="Script" uid="uid://ebxkfdgoilho" path="res://shared/objects/items/resources/consumable_item_resource.gd" id="1_te0wd"]
+[ext_resource type="Texture2D" uid="uid://b4idiqkoe3od4" path="res://shared/assets/images/mushroom.png" id="1_ygtov"]
+
+[resource]
+script = ExtResource("1_te0wd")
+health_change = -5.0
+enegry_change = 10.0
+item_key = 5
+display_name = "Гриб"
+icon = ExtResource("1_ygtov")
+description = "гриб пополняет вашу выносливость и отнимает здоровье"
+is_equippable = true
+metadata/_custom_type_script = "uid://ebxkfdgoilho"

@@ -6,6 +6,7 @@ class_name Player
 @export var friction: float = 0.15 # трение
 @export var acceleration: float = 0.1 # ускорение
 @export var bullet_schene: PackedScene
+@export var walking_energy_change_per_1m := -0.005 # walking - потребление
 
 @onready var equippable_item_holder: EquippableItemHolder = %EquippableItemHolder
 
@@ -25,26 +26,34 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	save_equippable_item_holder_position = equippable_item_holder.position
-	
-	for child in get_children():
-		if child is AbilityBase:
-			abilities[child.ability_name] = child
-			print("Loaded ability: ", child.ability_name)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("open_crafting_menu"):
 		EventSystem.UI_create.emit(UIConfig.Keys.CraftingMenu)
-	elif event.is_action_pressed("game_menu"):
+	elif event.is_action_pressed("esc"):	
 		EventSystem.UI_create.emit(UIConfig.Keys.MenuGame)
 	elif event.is_action_pressed("input_hot_key"):
 		EventSystem.EQU_hotkey_pressed.emit(int(event.as_text()))
 
 
 func _physics_process(_delta: float) -> void:
+	move(_delta)
+	check_walking_energy_change(_delta)
+	
 	if Input.is_action_pressed("use_item"):
 		equippable_item_holder.try_to_use_item()
-	
+
+
+func check_walking_energy_change(_delta: float) -> void:
+	if velocity.x:
+		EventSystem.PLA_change_energy.emit(
+			_delta *
+			walking_energy_change_per_1m *
+			Vector2(velocity.x, 0).length()
+		)
+
+func move(_delta: float) -> void:
 	# Применяем гравитацию
 	if not is_on_floor():
 		velocity.y += gravity * _delta
@@ -61,20 +70,7 @@ func _physics_process(_delta: float) -> void:
 	
 	equippable_item_holder.direction_flip(direction)
 
-	#handle_abilities_input()
-	#process_abilities(_delta)
 	move_and_slide()
-
-
-func handle_abilities_input():
-	for ability in abilities.values():
-		if ability.input_action != "" and Input.is_action_just_pressed(ability.input_action):
-			ability.activate()
-
-
-func process_abilities(delta: float):
-	for ability in abilities.values():
-		ability.physics_process_ability(delta)
 
 
 func shoot() -> void:
@@ -102,23 +98,3 @@ func set_freeze(_value: bool) -> void:
 	set_physics_process(!_value)
 	set_process_input(!_value)
 	set_process_unhandled_input(!_value)
-
-
-# API для способностей
-func get_input_direction() -> Vector2:
-	return Vector2(
-		Input.get_axis("left", "right"),
-		Input.get_axis("ui_up", "ui_down")
-	)
-
-func get_player_velocity() -> Vector2:
-	return velocity
-
-func set_player_velocity(new_velocity: Vector2):
-	velocity = new_velocity
-
-func get_player_position() -> Vector2:
-	return global_position
-
-func set_player_position(new_position: Vector2):
-	global_position = new_position

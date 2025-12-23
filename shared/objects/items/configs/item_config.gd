@@ -27,6 +27,11 @@ enum Keys {
 	Raft = 20, # Плот
 }
 
+enum WeaponKeys {
+	Axe = Keys.Axe,
+	Pickaxe = Keys.Pickaxe,
+}
+
 
 const ITEM_RESOURCE_PATHS := {
 	Keys.Plant: "res://shared/objects/items/resources/plant_item_resource.tres",
@@ -36,6 +41,8 @@ const ITEM_RESOURCE_PATHS := {
 	Keys.Crystal: "res://shared/objects/items/resources/crystal_item_resource.tres",
 	Keys.Rope: "res://shared/objects/items/resources/rope_item_resource.tres",
 	Keys.Axe: "res://shared/objects/items/resources/axe_item_resource.tres",
+	Keys.Log: "res://shared/objects/items/resources/log_item_resource.tres",
+	Keys.Mushroom: "res://shared/objects/items/resources/mushroom_item_resource.tres",
 }
 
 
@@ -44,8 +51,19 @@ static func get_item_resource(key: Keys) -> ItemResource:
 
 
 const EQUIPPABLE_ITEM_PATSH := {
-	Keys.Axe: "res://shared/objects/items/components/weapone/weapone_axe/weapone_axe.tscn"
+	#weapone
+	Keys.Axe: "res://shared/objects/items/components/equippables/weapone_axe/weapone_axe.tscn",
+	#consumable
+	Keys.Mushroom: "res://shared/objects/items/components/equippables/consumable_mushroom/consumable_mushroom.tscn"
 }
 
 static func get_equippable_item(key: Keys) -> PackedScene:
 	return load(EQUIPPABLE_ITEM_PATSH.get(key))
+
+
+const PICKUPPABLE_ITEM_PATSH := {
+	Keys.Log: "res://shared/objects/items/components/items/rigid_log_item/rigid_log_item.tscn"
+}
+
+static func get_pickuppable_item(key: Keys) -> PackedScene:
+	return load(PICKUPPABLE_ITEM_PATSH.get(key))

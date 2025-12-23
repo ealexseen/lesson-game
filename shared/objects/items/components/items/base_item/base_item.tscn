@@ -5,16 +5,19 @@
 [sub_resource type="CircleShape2D" id="CircleShape2D_fo04w"]
 radius = 40.0
 
-[node name="BaseItem" type="Area2D" unique_id=874065668]
+[node name="BaseItem" type="Node2D" unique_id=1780137311]
 z_index = 5
+
+[node name="Pickuppable" type="Area2D" parent="." unique_id=935353379]
 collision_layer = 16
+collision_mask = 33
 script = ExtResource("1_fo04w")
 
-[node name="PointPrompt" type="Marker2D" parent="." unique_id=467469272]
+[node name="PointPrompt" type="Marker2D" parent="Pickuppable" unique_id=467469272]
 unique_name_in_owner = true
 position = Vector2(0, -53)
 
-[node name="TextureRect" type="TextureRect" parent="." unique_id=293043908]
+[node name="TextureRect" type="TextureRect" parent="Pickuppable" unique_id=293043908]
 unique_name_in_owner = true
 offset_left = -40.0
 offset_top = -40.0
@@ -22,5 +25,5 @@ offset_right = 40.0
 offset_bottom = 40.0
 expand_mode = 1
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1046201066]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pickuppable" unique_id=1046201066]
 shape = SubResource("CircleShape2D_fo04w")

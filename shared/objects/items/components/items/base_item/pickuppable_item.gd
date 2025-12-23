@@ -3,11 +3,14 @@ class_name PickuppableItem extends InteractablesItem
 @export var item_key: ItemConfig.Keys
 
 var pickup_active = false
+var parent
 
 
 func _ready() -> void:
 	body_entered.connect(on_body_entered)
 	body_exited.connect(on_body_exited)
+	
+	parent = get_parent()
 
 
 func start_interaction() -> void:
@@ -21,7 +24,10 @@ func _input(event: InputEvent) -> void:
 
 
 func destroy_self() -> void:
-	queue_free()
+	if not parent:
+		return
+	
+	parent.queue_free()
 
 
 func set_pickup_active(value: bool) -> void:

@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://yl2hxmyb52i1"]
+
+[ext_resource type="PackedScene" uid="uid://blc6467djowee" path="res://shared/gui/components/buttons/button_base/button_base.tscn" id="1_m3lpe"]
+[ext_resource type="Script" uid="uid://cebnedofonerk" path="res://shared/gui/components/buttons/button_settings/button_settings.gd" id="2_xe7w5"]
+
+[node name="ButtonSetting" unique_id=139092568 instance=ExtResource("1_m3lpe")]
+text = "Настройки"
+script = ExtResource("2_xe7w5")

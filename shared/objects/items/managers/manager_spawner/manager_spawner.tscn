@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://dyhgv3ymn0cwn"]
+
+[ext_resource type="Script" uid="uid://bfqhm65u7k2jx" path="res://shared/objects/items/managers/manager_spawner/manager_spawner.gd" id="1_hdfbj"]
+
+[node name="ManagerSpawner" type="Node2D" unique_id=1392259211]
+script = ExtResource("1_hdfbj")
+
+[node name="Items" type="Node2D" parent="." unique_id=1345664326]

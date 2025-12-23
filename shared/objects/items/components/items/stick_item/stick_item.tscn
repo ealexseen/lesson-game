@@ -4,8 +4,9 @@
 [ext_resource type="Texture2D" uid="uid://dlohd6yy63f7j" path="res://shared/assets/images/stick.png" id="2_egyqf"]
 
 [node name="StickItem" unique_id=874065668 instance=ExtResource("1_5g5g5")]
-item_key = 1
-prompt = "Ветка"
 
-[node name="TextureRect" parent="." index="1" unique_id=293043908]
+[node name="Pickuppable" parent="." index="0" unique_id=935353379]
+item_key = 2
+
+[node name="TextureRect" parent="Pickuppable" index="1" unique_id=293043908]
 texture = ExtResource("2_egyqf")

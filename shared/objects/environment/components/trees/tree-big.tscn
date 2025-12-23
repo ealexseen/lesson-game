@@ -1,0 +1,45 @@
+[gd_scene load_steps=4 format=3 uid="uid://dg28jyvf3qpuv"]
+
+[ext_resource type="PackedScene" uid="uid://ca3o1nkss4id1" path="res://shared/objects/environment/components/template/hittable_object_template/hittable_object_template.tscn" id="1_61di4"]
+[ext_resource type="Resource" uid="uid://c1h25qyjy5754" path="res://shared/objects/environment/resources/tree_big_attributes.tres" id="2_0dgfn"]
+[ext_resource type="Texture2D" uid="uid://6wdwn3iq680" path="res://shared/assets/images/tree-big.png" id="2_ie3cl"]
+
+[node name="TreeBig" unique_id=1335046046 instance=ExtResource("1_61di4")]
+z_index = 1
+scale = Vector2(2, 2)
+attributes = ExtResource("2_0dgfn")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" parent_id_path=PackedInt32Array(194205188) index="0" unique_id=640272792]
+polygon = PackedVector2Array(103, -159, 272, -173, 317, -264, 260, -429, 147, -470, 23, -479, -115, -477, -205, -460, -270, -369, -310, -289, -320, -212, -216, -171, -75, -149, -18, -194, 58, -207)
+
+[node name="Marker2D" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="0" unique_id=1454322368]
+position = Vector2(-1.5, -60)
+
+[node name="Marker2D2" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="1" unique_id=1795878359]
+position = Vector2(1.5, -145.5)
+
+[node name="Marker2D3" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="2" unique_id=843989299]
+position = Vector2(73, -217)
+
+[node name="Marker2D4" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="3" unique_id=1090412563]
+position = Vector2(-85.5, -217)
+
+[node name="Marker2D5" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="4" unique_id=1292870240]
+position = Vector2(-1.5, -291)
+
+[node name="Marker2D6" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="5" unique_id=607631234]
+position = Vector2(121, -321)
+
+[node name="Marker2D7" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="6" unique_id=566932965]
+position = Vector2(-111.5, -342.5)
+
+[node name="Marker2D8" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="7" unique_id=1159125631]
+position = Vector2(-1.5, -396.5)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Hitbox" parent_id_path=PackedInt32Array(1962271803) index="0" unique_id=2031112051]
+position = Vector2(0, 1)
+polygon = PackedVector2Array(-76, -14, -42, -51, -31, -109, -59, -159, -33, -183, 2, -185, 99, -169, 51, -122, 36, -71, 47, -33, 105, -9, 16, -4, -101, 0)
+
+[node name="TreeBig" type="Sprite2D" parent="." index="3" unique_id=2008177948]
+position = Vector2(-9, -258)
+texture = ExtResource("2_ie3cl")

@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="HittableObjectAttributes" load_steps=2 format=3 uid="uid://c1h25qyjy5754"]
+
+[ext_resource type="Script" uid="uid://p8qtjbonnyda" path="res://shared/objects/environment/resources/hittable_object_attributes.gd" id="1_sx7vc"]
+
+[resource]
+script = ExtResource("1_sx7vc")
+max_health = 200
+metadata/_custom_type_script = "uid://p8qtjbonnyda"

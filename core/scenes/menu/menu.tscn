@@ -1,19 +1,28 @@
-[gd_scene load_steps=3 format=3 uid="uid://bisimkg8iptx"]
+[gd_scene load_steps=5 format=3 uid="uid://bisimkg8iptx"]
 
-[ext_resource type="PackedScene" uid="uid://y64kuidrk1bi" path="res://shared/gui/components/navigations/navigation_menu/navigation_menu.tscn" id="1_yqeox"]
+[ext_resource type="Script" uid="uid://dk5nit5g4tsyo" path="res://core/scenes/menu/menu.gd" id="1_t8bwn"]
 [ext_resource type="PackedScene" uid="uid://bg4ytc0h2me4p" path="res://shared/gui/components/cursor/cursor_menu/cursor_menu.tscn" id="2_vjb58"]
+[ext_resource type="Texture2D" uid="uid://cbwxrmmt7sajl" path="res://shared/assets/images/bg_menu.jpg" id="3_vseom"]
+[ext_resource type="PackedScene" uid="uid://b0kykekym3cki" path="res://shared/gui/managers/manager_ui/manager_ui.tscn" id="4_t8bwn"]
 
 [node name="Menu" type="Node2D" unique_id=1486772623]
+script = ExtResource("1_t8bwn")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=445825517]
+[node name="UILayer" type="CanvasLayer" parent="." unique_id=445825517]
 process_mode = 3
 
-[node name="CursorMenu" parent="CanvasLayer" unique_id=146179460 instance=ExtResource("2_vjb58")]
+[node name="CursorMenu" parent="UILayer" unique_id=146179460 instance=ExtResource("2_vjb58")]
+z_index = 20
 
-[node name="HUDController" type="Node" parent="CanvasLayer" unique_id=1429389801]
+[node name="UI" type="Node" parent="UILayer" unique_id=1422399915]
 
-[node name="UI" type="Node" parent="CanvasLayer" unique_id=1422399915]
+[node name="TextureRect" type="TextureRect" parent="UILayer/UI" unique_id=1462834107]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_vseom")
 
-[node name="Navigation" parent="CanvasLayer/UI" unique_id=1809149779 instance=ExtResource("1_yqeox")]
-z_index = -4
-z_as_relative = false
+[node name="ManagerUi" parent="UILayer" unique_id=1794067849 instance=ExtResource("4_t8bwn")]
+unique_name_in_owner = true

@@ -1,0 +1,31 @@
+[gd_scene load_steps=3 format=3 uid="uid://dyr7m3mhu3sfb"]
+
+[ext_resource type="Script" uid="uid://du58iiiicsuux" path="res://shared/objects/items/components/items/base_item/base_item.gd" id="2_y2tdd"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fo04w"]
+radius = 40.0
+
+[node name="RigidBaseItem" type="RigidBody2D" unique_id=1617777290]
+z_index = 5
+collision_layer = 384
+collision_mask = 642
+
+[node name="Pickuppable" type="Area2D" parent="." unique_id=935353379]
+collision_layer = 16
+collision_mask = 33
+script = ExtResource("2_y2tdd")
+
+[node name="PointPrompt" type="Marker2D" parent="Pickuppable" unique_id=467469272]
+unique_name_in_owner = true
+position = Vector2(0, -53)
+
+[node name="TextureRect" type="TextureRect" parent="Pickuppable" unique_id=293043908]
+unique_name_in_owner = true
+offset_left = -40.0
+offset_top = -40.0
+offset_right = 40.0
+offset_bottom = 40.0
+expand_mode = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pickuppable" unique_id=1046201066]
+shape = SubResource("CircleShape2D_fo04w")

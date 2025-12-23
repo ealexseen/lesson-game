@@ -40,5 +40,5 @@ theme = ExtResource("2_j081a")
 unique_name_in_owner = true
 layout_mode = 2
 theme = ExtResource("2_j081a")
-text = "Main Menu"
+text = "Главное Меню"
 horizontal_alignment = 1

@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("2_vj54y")
+range = 100.0
 item_key = 12
 display_name = "Топор"
 icon = ExtResource("1_vj54y")

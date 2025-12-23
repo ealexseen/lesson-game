@@ -3,9 +3,9 @@
 [ext_resource type="Script" uid="uid://1st7j1eteodn" path="res://core/scenes/map_1/map_1.gd" id="1_gbsvo"]
 [ext_resource type="PackedScene" uid="uid://bg4ytc0h2me4p" path="res://shared/gui/components/cursor/cursor_menu/cursor_menu.tscn" id="4_2vcri"]
 [ext_resource type="PackedScene" uid="uid://d0uov6cgmsoae" path="res://shared/gui/components/cursor/cursor_game/cursor_game.tscn" id="4_fog8g"]
+[ext_resource type="PackedScene" uid="uid://cekllbbbu531j" path="res://shared/gui/components/HUD/hud.tscn" id="5_v5ufy"]
 [ext_resource type="PackedScene" uid="uid://b0kykekym3cki" path="res://shared/gui/managers/manager_ui/manager_ui.tscn" id="6_fog8g"]
 [ext_resource type="PackedScene" uid="uid://bujq221mr61df" path="res://shared/gui/components/bulletin/managers/bulletin_manager/bulletin_manager.tscn" id="6_wqnuq"]
-[ext_resource type="PackedScene" uid="uid://ti2n868behaj" path="res://shared/gui/components/hot_bar/components/hot_bar.tscn" id="7_gbsvo"]
 [ext_resource type="PackedScene" uid="uid://m2d25c6cv54u" path="res://core/stages/managers/stage_manager/stage_manager.tscn" id="8_fog8g"]
 
 [node name="MainGame" type="Node" unique_id=1406728254]
@@ -24,9 +24,10 @@ visible = false
 [node name="HUDController" type="Node" parent="UILayer" unique_id=1592681573]
 process_mode = 3
 
-[node name="ActionBar" parent="UILayer" unique_id=1543694819 instance=ExtResource("7_gbsvo")]
-
 [node name="ManagerUi" parent="UILayer" unique_id=1794067849 instance=ExtResource("6_fog8g")]
+
+[node name="Hud" parent="UILayer" unique_id=1280878877 instance=ExtResource("5_v5ufy")]
+z_index = 1
 
 [node name="Managers" type="Node" parent="." unique_id=1778920183]
 process_mode = 3

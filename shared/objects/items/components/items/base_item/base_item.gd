@@ -4,7 +4,7 @@ class_name BaseItem extends PickuppableItem
 @onready var texture_rect: TextureRect = %TextureRect
 
 func _ready() -> void:
-	super._ready()
+	super()
 	
 	var item_resource = ItemConfig.get_item_resource(item_key)
 	

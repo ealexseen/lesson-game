@@ -19,3 +19,15 @@ func _on_area_entered(collider: Area2D) -> void:
 
 func _on_area_exited(_area: Area2D) -> void:
 	EventSystem.BUL_destroy_bulletin.emit(BulletinConfig.Keys.InteractionPrompt)
+
+
+func check_hit() -> void:
+	var space_state := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.new()
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	query.collision_mask = 0xFFFFFFFF
+	query.from = global_position
+	query.to = global_position + Vector2(20, 20)
+	
+	var result := space_state.intersect_ray(query)

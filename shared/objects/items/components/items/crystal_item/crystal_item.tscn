@@ -4,8 +4,9 @@
 [ext_resource type="Texture2D" uid="uid://b0ea1uxyfu62h" path="res://shared/assets/images/crystal.png" id="2_3042t"]
 
 [node name="CrystalItem" unique_id=874065668 instance=ExtResource("1_q74ki")]
-item_key = 3
-prompt = "Кристал"
 
-[node name="TextureRect" parent="." index="1" unique_id=293043908]
+[node name="Pickuppable" parent="." index="0" unique_id=935353379]
+item_key = 4
+
+[node name="TextureRect" parent="Pickuppable" index="1" unique_id=293043908]
 texture = ExtResource("2_3042t")

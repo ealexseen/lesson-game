@@ -7,9 +7,11 @@
 radius = 30.0
 
 [node name="CoinItem" unique_id=874065668 instance=ExtResource("1_xoe3d")]
-prompt = "Монетка"
 
-[node name="TextureRect" parent="." index="1" unique_id=293043908]
+[node name="Pickuppable" parent="." index="0" unique_id=935353379]
+item_key = 1
+
+[node name="TextureRect" parent="Pickuppable" index="1" unique_id=293043908]
 custom_minimum_size = Vector2(60, 60)
 anchors_preset = 8
 anchor_left = 0.5
@@ -24,5 +26,5 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_4c5pv")
 
-[node name="CollisionShape2D" parent="." index="2" unique_id=1046201066]
+[node name="CollisionShape2D" parent="Pickuppable" index="2" unique_id=1046201066]
 shape = SubResource("CircleShape2D_4c5pv")

@@ -1,7 +1,7 @@
 class_name EquippableItemHolder extends Node2D
 
 
-var current_item: EquippableWeaponeTemplate
+var current_item
 var save_position
 
 func _enter_tree() -> void:
@@ -37,6 +37,10 @@ func on_equip_item(item_key) -> void:
 		var resource = ItemConfig.get_item_resource(item_key)
 
 		current_item.weapon_item_resource = resource
+	elif current_item is EquippableConsumableTemplate:
+		var resource = ItemConfig.get_item_resource(item_key)
+		
+		current_item.consumable_item_resource = resource
 	
 	add_child(current_item)
 
