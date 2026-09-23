@@ -41,8 +41,11 @@ const ITEM_RESOURCE_PATHS := {
 	Keys.Crystal: "res://shared/objects/items/resources/crystal_item_resource.tres",
 	Keys.Rope: "res://shared/objects/items/resources/rope_item_resource.tres",
 	Keys.Axe: "res://shared/objects/items/resources/axe_item_resource.tres",
+	Keys.Pickaxe: "res://shared/objects/items/resources/pickaxe_item_resource.tres",
 	Keys.Log: "res://shared/objects/items/resources/log_item_resource.tres",
 	Keys.Mushroom: "res://shared/objects/items/resources/mushroom_item_resource.tres",
+	Keys.Coal: "res://shared/objects/items/resources/coal_item_resource.tres",
+	Keys.RawMeat: "res://shared/objects/items/resources/raw_meat_item_resource.tres",
 }
 
 
@@ -53,6 +56,7 @@ static func get_item_resource(key: Keys) -> ItemResource:
 const EQUIPPABLE_ITEM_PATSH := {
 	#weapone
 	Keys.Axe: "res://shared/objects/items/components/equippables/weapone_axe/weapone_axe.tscn",
+	Keys.Pickaxe: "res://shared/objects/items/components/equippables/weapone_pickaxe/weapone_pickaxe.tscn",
 	#consumable
 	Keys.Mushroom: "res://shared/objects/items/components/equippables/consumable_mushroom/consumable_mushroom.tscn"
 }
@@ -62,7 +66,9 @@ static func get_equippable_item(key: Keys) -> PackedScene:
 
 
 const PICKUPPABLE_ITEM_PATSH := {
-	Keys.Log: "res://shared/objects/items/components/items/rigid_log_item/rigid_log_item.tscn"
+	Keys.Log: "res://shared/objects/items/components/items/rigid_log_item/rigid_log_item.tscn",
+	Keys.Coal: "res://shared/objects/items/components/items/rigid_coal_item/rigid_coal_item.tscn",
+	Keys.RawMeat: "res://shared/objects/items/components/items/rigid_raw_meat_item/rigid_raw_meat_item.tscn"
 }
 
 static func get_pickuppable_item(key: Keys) -> PackedScene:

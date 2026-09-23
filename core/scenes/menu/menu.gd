@@ -18,4 +18,4 @@ func handle_escape() -> void:
 	if manager_ui.items.has(UIConfig.Keys.MenuBase):
 		return
 	
-	EventSystem.UI_replace.emit(UIConfig.Keys.MenuBase)
+	#EventSystem.UI_replace.emit(UIConfig.Keys.MenuBase)

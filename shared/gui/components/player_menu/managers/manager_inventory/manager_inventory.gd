@@ -11,26 +11,18 @@ var inventory : Array = [
 	ItemConfig.Keys.Stone,
 ]
 var hotbar: Array = [
-	ItemConfig.Keys.Axe
+	ItemConfig.Keys.Axe,
+	ItemConfig.Keys.Pickaxe,
 ]
 
 
 func _enter_tree() -> void:
-	EventSystem.INV_try_to_pickup_item.connect(on_try_to_pickup_item)
-	EventSystem.INV_ask_update_inventory.connect(sent_inventory)
+	EventSystem.INV_try_to_pickup_item.connect(_on_try_to_pickup_item)
+	EventSystem.INV_ask_update_inventory.connect(_on_sent_inventory)
 	EventSystem.INV_switch_two_item_indexes.connect(_on_change_order)
 	EventSystem.INV_add_item.connect(_on_add_item)
 	EventSystem.INV_remove_items.connect(_on_remove_items)
-	EventSystem.INV_delete_item_by_index.connect(on_delete_item_by_index)
-
-
-func on_delete_item_by_index(index: int, is_in_hotbar: bool) -> void:
-	if is_in_hotbar:
-		hotbar[index] = null
-		EventSystem.INV_hotbar_updated.emit(hotbar)
-	else:
-		inventory[index] = null
-		EventSystem.INV_inventory_updated.emit(inventory)
+	EventSystem.INV_delete_item_by_index.connect(_on_delete_item_by_index)
 
 
 func _ready() -> void:
@@ -38,6 +30,15 @@ func _ready() -> void:
 	hotbar.resize(HOTBAR_SIZE)
 	
 	EventSystem.INV_hotbar_updated.emit(hotbar)
+
+
+func _on_delete_item_by_index(index: int, is_in_hotbar: bool) -> void:
+	if is_in_hotbar:
+		hotbar[index] = null
+		EventSystem.INV_hotbar_updated.emit(hotbar)
+	else:
+		inventory[index] = null
+		EventSystem.INV_inventory_updated.emit(inventory)
 
 
 func _on_change_order(
@@ -64,11 +65,11 @@ func _on_change_order(
 	EventSystem.INV_hotbar_updated.emit(hotbar)
 
 
-func sent_inventory() -> void:
+func _on_sent_inventory() -> void:
 	EventSystem.INV_inventory_updated.emit(inventory)
 
 
-func on_try_to_pickup_item(item_key: ItemConfig.Keys, callback: Callable) -> void:
+func _on_try_to_pickup_item(item_key: ItemConfig.Keys, callback: Callable) -> void:
 	if not get_free_slots(): return
 	
 	add_item(item_key)

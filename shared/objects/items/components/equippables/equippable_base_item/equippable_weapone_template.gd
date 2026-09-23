@@ -18,15 +18,16 @@ func check_hit() -> void:
 	var to = hit_check_marker.global_position
 	
 	# debug
-	#var line := Line2D.new()
-	#line.add_point(from)
-	#line.add_point(to)
-	#line.width = 2.0
-	#line.default_color = Color.RED
-	#
-	#get_tree().current_scene.add_child(line)
+	var line := Line2D.new()
+	line.add_point(from)
+	line.add_point(to)
+	line.width = 2.0
+	line.default_color = Color.RED
+	
+	get_tree().current_scene.add_child(line)
 	
 	var space_state := get_world_2d().direct_space_state
+	
 	var query := PhysicsRayQueryParameters2D.new()
 	query.collide_with_areas = true
 	query.collide_with_bodies = false
@@ -39,6 +40,6 @@ func check_hit() -> void:
 	if not result.is_empty():
 		result.collider.take_hit(weapon_item_resource)
 		
-	##debug
-	#await get_tree().create_timer(3.0).timeout
-	#line.queue_free()
+	#debug
+	await get_tree().create_timer(1.0).timeout
+	line.queue_free()

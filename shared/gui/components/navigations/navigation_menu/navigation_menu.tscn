@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://yl2hxmyb52i1" path="res://shared/gui/components/buttons/button_settings/button_settings.tscn" id="3_u5xx2"]
 [ext_resource type="PackedScene" uid="uid://dwag858lpck6o" path="res://shared/gui/components/buttons/button_new_game/button_new_game.tscn" id="3_w23qs"]
 
-[node name="Navigation" unique_id=1809149779 instance=ExtResource("1_comr3")]
+[node name="NavigationMenu" unique_id=1809149779 instance=ExtResource("1_comr3")]
 
 [node name="PanelContainer" parent="." index="0" unique_id=2050216374]
 offset_top = -110.0

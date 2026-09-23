@@ -8,7 +8,7 @@
 attributes = ExtResource("2_qycar")
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" parent_id_path=PackedInt32Array(194205188) index="0" unique_id=1519564468]
-polygon = PackedVector2Array(-1, -277, 142, -280, 182, -382, 147, -501, 79, -537, -58, -538, -179, -496, -229, -436, -207, -357, -211, -305, -216, -271, -190, -233, -159, -228, -77, -271)
+polygon = PackedVector2Array(0, -294, 39, -285, 82, -269, 116, -273, 126, -322, 149, -349, 171, -347, 184, -369, 162, -375, 134, -492, 71, -524, -39, -523, -111, -508, -164, -490, -187, -458, -212, -433, -197, -364, -194, -314, -200, -278, -186, -252, -157, -244, -77, -285, -38, -296)
 
 [node name="Marker2D" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="0" unique_id=750583480]
 position = Vector2(-14, -226)

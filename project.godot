@@ -8,6 +8,10 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="LessonGame"
@@ -24,13 +28,13 @@ GlobalSettings="*res://core/global_settings/settings.gd"
 [debug]
 
 gdscript/warnings/unused_signal=0
+settings/size/initial_screen=0
 
 [display]
 
-window/size/viewport_width=1920
-window/size/viewport_height=1080
+window/size/viewport_width=800
+window/size/viewport_height=600
 window/size/mode=3
-window/stretch/mode="canvas_items"
 
 [global_group]
 
@@ -105,12 +109,8 @@ input_hot_key={
 2d_physics/layer_8="big_rigid_pickuppable"
 2d_physics/layer_9="small_rigid_pickuppable"
 2d_physics/layer_10="static_body"
+2d_physics/layer_11="actor"
 
 [physics]
 
 3d/physics_engine="Jolt Physics"
-
-[rendering]
-
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"

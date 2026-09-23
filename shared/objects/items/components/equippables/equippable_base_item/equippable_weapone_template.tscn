@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://c1mosr46holr7"]
+[gd_scene format=3 uid="uid://c1mosr46holr7"]
 
 [ext_resource type="PackedScene" uid="uid://ckb4p6vonx3gb" path="res://shared/objects/items/components/equippables/equippable_base_item/equippable_item_template.tscn" id="1_m6cjh"]
 [ext_resource type="Script" uid="uid://1bq011o3v7va" path="res://shared/objects/items/components/equippables/equippable_base_item/equippable_weapone_template.gd" id="2_p7we1"]

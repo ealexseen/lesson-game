@@ -10,7 +10,7 @@ scale = Vector2(2, 2)
 attributes = ExtResource("2_0dgfn")
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" parent_id_path=PackedInt32Array(194205188) index="0" unique_id=640272792]
-polygon = PackedVector2Array(103, -159, 272, -173, 317, -264, 260, -429, 147, -470, 23, -479, -115, -477, -205, -460, -270, -369, -310, -289, -320, -212, -216, -171, -75, -149, -18, -194, 58, -207)
+polygon = PackedVector2Array(103, -159, 269, -181.5, 307, -230, 245, -253.5, 301, -296.5, 262.5, -351.5, 200, -358.5, 188.5, -380.5, 249, -418.5, 164, -417, 154.5, -452.5, 47, -451.5, 23, -479, -89.71799, -477.3664, -112, -448, -167, -445.5, -202.5, -438.5, -223, -406, -256.5, -365, -181, -329.5, -214.5, -308.5, -305, -286, -312.5, -216, -206.5, -176.5, -75, -149, -18, -194, 58, -207)
 
 [node name="Marker2D" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="0" unique_id=1454322368]
 position = Vector2(-1.5, -60)

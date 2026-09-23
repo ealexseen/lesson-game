@@ -113,17 +113,17 @@ _data = {
 &"use_item": SubResource("Animation_4wpp0")
 }
 
-[node name="EquippableAxe" unique_id=2035206690 instance=ExtResource("1_a5n2i")]
+[node name="EquippableAxe" instance=ExtResource("1_a5n2i")]
 
-[node name="AnimationPlayer" parent="." index="0" unique_id=777121434]
+[node name="AnimationPlayer" parent="." index="0"]
 libraries = {
 &"": SubResource("AnimationLibrary_6dcsh")
 }
 
-[node name="MeshHolder" parent="." index="1" unique_id=1546497705]
+[node name="MeshHolder" parent="." index="1"]
 position = Vector2(-8, 0)
 
-[node name="Axe" type="Sprite2D" parent="MeshHolder" index="0" unique_id=1535968055]
+[node name="Axe" type="Sprite2D" parent="MeshHolder" index="0"]
 position = Vector2(8.999996, -0.13456732)
 rotation = -0.788473
 scale = Vector2(0.195041, 0.19312353)

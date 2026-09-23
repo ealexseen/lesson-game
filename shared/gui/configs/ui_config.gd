@@ -11,7 +11,7 @@ const UI_PATHS = {
 	Keys.CraftingMenu: "res://shared/gui/components/player_menu/components/crafting_menu/crafting_menu.tscn",
 	Keys.MenuGame: "res://shared/gui/components/navigations/navigation_game/navigation_game.tscn",
 	Keys.MenuBase: "res://shared/gui/components/navigations/navigation_menu/navigation_menu.tscn",
-	Keys.MenuSettings: "res://shared/gui/components/settings/settings.tscn"
+	Keys.MenuSettings: "res://shared/gui/components/settings/components/settings_root.tscn"
 }
 
 static func get_ui(key: Keys) -> Control:

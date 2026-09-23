@@ -58,7 +58,7 @@ func _on_destroy_ui(key: BulletinConfig.Keys) -> void:
 	items[key].queue_free()
 	items.erase(key)
 	last_item = key
-	 
+	
 	if not items.size():
 		EventSystem.PLA_unfreeze_player.emit()
 	
