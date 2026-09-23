@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://bgllyr4dxpr28"]
+
+[ext_resource type="Texture2D" uid="uid://osa1wgyqn5ax" path="res://shared/assets/images/icon.svg" id="1_oul6g"]
+[ext_resource type="Script" uid="uid://bqrrx5yf5tnkq" path="res://shared/actors/player/player.gd" id="1_rkbax"]
+[ext_resource type="PackedScene" uid="uid://ditft3lrgvsf3" path="res://shared/objects/abilities/managers/ability_manager/ability_manager.tscn" id="3_g1dw6"]
+[ext_resource type="PackedScene" uid="uid://cp3p55xisn3sh" path="res://shared/actors/player/equippable_item_holder/equippable_item_holder.tscn" id="3_xkryw"]
+[ext_resource type="PackedScene" uid="uid://hhv0gs0voudq" path="res://shared/gui/components/player_menu/managers/manager_inventory/manager_inventory.tscn" id="4_jnjyq"]
+[ext_resource type="PackedScene" uid="uid://bb6yyqqcchsnt" path="res://shared/gui/components/hot_bar/managers/equipped_item_manager/equipped_item_manager.tscn" id="5_gnkmh"]
+[ext_resource type="PackedScene" uid="uid://cyhy8e7ejrbbb" path="res://shared/actors/player/managers/player_stats_manager/player_stats_manager.tscn" id="7_8bsna"]
+[ext_resource type="Script" path="res://shared/actors/player/camera/smooth_camera.gd" id="8_smoothcam"]
+
+[node name="Player" type="CharacterBody2D" unique_id=1996297568]
+process_mode = 1
+z_index = 1
+collision_mask = 666
+script = ExtResource("1_rkbax")
+
+[node name="Icon" type="Sprite2D" parent="." unique_id=684283497]
+position = Vector2(-1, -1)
+texture = ExtResource("1_oul6g")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1084907743]
+zoom = Vector2(0.7, 0.7)
+limit_left = -1200
+limit_top = -2200
+limit_right = 12800
+limit_bottom = 2800
+position_smoothing_enabled = true
+position_smoothing_speed = 6.0
+drag_horizontal_enabled = true
+drag_vertical_enabled = true
+drag_left_margin = 0.3
+drag_top_margin = 0.25
+drag_right_margin = 0.3
+drag_bottom_margin = 0.25
+script = ExtResource("8_smoothcam")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=2101583777]
+polygon = PackedVector2Array(-65, -54, -60, -61, -53, -65, 51, -65, 58, -61, 63, -53, 63, 51, 59, 57, 52, 63, -53, 63, -60, 59, -65, 51)
+
+[node name="EquippableItemHolder" parent="." unique_id=429963636 instance=ExtResource("3_xkryw")]
+unique_name_in_owner = true
+position = Vector2(63, 1)
+
+[node name="Managers" type="Node" parent="." unique_id=394778005]
+
+[node name="AbilityManager" parent="Managers" unique_id=1148863773 node_paths=PackedStringArray("player") instance=ExtResource("3_g1dw6")]
+player = NodePath("../..")
+
+[node name="ManagerInventory" parent="Managers" unique_id=130490871 instance=ExtResource("4_jnjyq")]
+
+[node name="EquippedItemManager" parent="Managers" unique_id=396259627 instance=ExtResource("5_gnkmh")]
+
+[node name="PlayerStatsManager" parent="Managers" unique_id=919647898 instance=ExtResource("7_8bsna")]

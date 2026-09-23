@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3 uid="uid://drqb1xo7k8sba"]
+
+[ext_resource type="PackedScene" uid="uid://dyr7m3mhu3sfb" path="res://shared/objects/items/components/items/base_item/rigid_base_item.tscn" id="1_0dgwj"]
+[ext_resource type="Texture2D" uid="uid://baa0fhn2g1kif" path="res://shared/assets/images/raw-meat.png" id="2_4b8wk"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_tbr3f"]
+radius = 14.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_4b8wk"]
+radius = 14.0
+
+[node name="RigidRawMeatItem" instance=ExtResource("1_0dgwj")]
+rotation = 1.5707964
+collision_layer = 256
+collision_mask = 898
+
+[node name="Pickuppable" parent="." index="0"]
+item_key = 10
+
+[node name="PointPrompt" parent="Pickuppable" index="0"]
+position = Vector2(-49, 2.1418582e-06)
+
+[node name="TextureRect" parent="Pickuppable" index="1"]
+offset_left = -16.539589
+offset_top = -17.539589
+offset_right = 16.539589
+offset_bottom = 15.539589
+texture = ExtResource("2_4b8wk")
+
+[node name="CollisionShape2D" parent="Pickuppable" index="2"]
+position = Vector2(-1, -0.9999999)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_tbr3f")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." index="1"]
+position = Vector2(-1.0000005, -1.0000002)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_4b8wk")
+debug_color = Color(0.53195465, 0, 0.70196074, 0.41960785)

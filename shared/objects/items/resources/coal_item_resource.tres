@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=3 format=3 uid="uid://dtlqrt57y1yg5"]
+
+[ext_resource type="Texture2D" uid="uid://sgjs7vpi7vjs" path="res://shared/assets/images/coal.png" id="1_qeufn"]
+[ext_resource type="Script" uid="uid://b5sp5k3gqh1tj" path="res://shared/objects/items/resources/item_resource.gd" id="1_v8ohq"]
+
+[resource]
+script = ExtResource("1_v8ohq")
+item_key = 8
+display_name = "Уголь"
+icon = ExtResource("1_qeufn")
+description = "Уголья можно использовать как топливо или для других нужд"
+metadata/_custom_type_script = "uid://b5sp5k3gqh1tj"

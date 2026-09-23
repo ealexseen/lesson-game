@@ -1,0 +1,178 @@
+[gd_scene format=3 uid="uid://bsbbyvuwvbotv"]
+
+[ext_resource type="PackedScene" uid="uid://dhdghvpymvg1l" path="res://shared/actors/animals/animal_template/animal_template.tscn" id="1_8tcfp"]
+[ext_resource type="Texture2D" uid="uid://coj6a5xyc1feu" path="res://shared/assets/images/animals/4 Cat 2/Idle.png" id="2_j5q5q"]
+[ext_resource type="Texture2D" uid="uid://l8414n3o5naw" path="res://shared/assets/images/animals/4 Cat 2/Walk.png" id="3_7kydx"]
+[ext_resource type="Texture2D" uid="uid://bt4cbwi2nyv1i" path="res://shared/assets/images/animals/4 Cat 2/Death.png" id="4_ttkdv"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ttkdv"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ttkdv"]
+size = Vector2(19.69163, 17.180618)
+
+[sub_resource type="Animation" id="Animation_7kydx"]
+length = 0.001
+
+[sub_resource type="Animation" id="Animation_puwcc"]
+resource_name = "deat"
+length = 0.4
+
+[sub_resource type="Animation" id="Animation_j5q5q"]
+resource_name = "idle"
+length = 0.4
+loop_mode = 1
+
+[sub_resource type="Animation" id="Animation_ttkdv"]
+resource_name = "walk"
+length = 0.6
+loop_mode = 1
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_7kydx"]
+_data = {
+&"RESET": SubResource("Animation_7kydx"),
+&"deat": SubResource("Animation_puwcc"),
+&"idle": SubResource("Animation_j5q5q"),
+&"walk": SubResource("Animation_ttkdv")
+}
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3djum"]
+atlas = ExtResource("4_ttkdv")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v0s2j"]
+atlas = ExtResource("4_ttkdv")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gc7xj"]
+atlas = ExtResource("4_ttkdv")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7avpy"]
+atlas = ExtResource("4_ttkdv")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ttkdv"]
+atlas = ExtResource("2_j5q5q")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_puwcc"]
+atlas = ExtResource("2_j5q5q")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vu2v1"]
+atlas = ExtResource("2_j5q5q")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1c447"]
+atlas = ExtResource("2_j5q5q")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_u8xrr"]
+atlas = ExtResource("3_7kydx")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ifv55"]
+atlas = ExtResource("3_7kydx")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mhsdk"]
+atlas = ExtResource("3_7kydx")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bw6c2"]
+atlas = ExtResource("3_7kydx")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_81bua"]
+atlas = ExtResource("3_7kydx")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s0038"]
+atlas = ExtResource("3_7kydx")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ttkdv"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3djum")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_v0s2j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gc7xj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7avpy")
+}],
+"loop": false,
+"name": &"death",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ttkdv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_puwcc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vu2v1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1c447")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_u8xrr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ifv55")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mhsdk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bw6c2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_81bua")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s0038")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 10.0
+}]
+
+[node name="Cat" unique_id=1581194018 instance=ExtResource("1_8tcfp")]
+scale = Vector2(4, 4)
+idle_animations = Array[String](["idle"])
+
+[node name="CollisionShape2D" parent="." index="0" unique_id=329876229]
+position = Vector2(-4.5, 0)
+shape = SubResource("CircleShape2D_ttkdv")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" parent_id_path=PackedInt32Array(381861715) index="0" unique_id=1451056112]
+position = Vector2(-4.1541853, 0.6607931)
+shape = SubResource("RectangleShape2D_ttkdv")
+debug_color = Color(0.482598, 0, 0.70196074, 0.41960785)
+
+[node name="MeatSpawnMarker" parent="." index="3" unique_id=504379604]
+position = Vector2(-4.75, -10)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." index="4" unique_id=1283165953]
+unique_name_in_owner = true
+libraries/ = SubResource("AnimationLibrary_7kydx")
+autoplay = &"idle"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." index="5" unique_id=869683052]
+position = Vector2(0, -14.5)
+sprite_frames = SubResource("SpriteFrames_ttkdv")
+animation = &"idle"

@@ -1,0 +1,211 @@
+[gd_scene load_steps=2 format=3 uid="uid://dmvvas2ckyspc"]
+
+[ext_resource type="Theme" uid="uid://due8olnny4q8h" path="res://shared/theme/theme.tres" id="2_ksbef"]
+
+[node name="ControlsContainer" type="ScrollContainer" unique_id=99625293]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=215102600]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Key" type="PanelContainer" parent="VBoxContainer" unique_id=655147001]
+layout_mode = 2
+size_flags_vertical = 4
+theme = ExtResource("2_ksbef")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Key" unique_id=1232339271]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="VBoxContainer/Key/MarginContainer" unique_id=534603840]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/Key/MarginContainer/HboxContainer" unique_id=174368384]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Прыжок"
+
+[node name="Value" type="Label" parent="VBoxContainer/Key/MarginContainer/HboxContainer" unique_id=927946439]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "space"
+
+[node name="Key2" type="PanelContainer" parent="VBoxContainer" unique_id=1065818528]
+layout_mode = 2
+size_flags_vertical = 4
+theme = ExtResource("2_ksbef")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Key2" unique_id=256757411]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="VBoxContainer/Key2/MarginContainer" unique_id=1961955062]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/Key2/MarginContainer/HboxContainer" unique_id=406947876]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Лево"
+
+[node name="Value" type="Label" parent="VBoxContainer/Key2/MarginContainer/HboxContainer" unique_id=1126563980]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "A, arrow_left"
+
+[node name="Key3" type="PanelContainer" parent="VBoxContainer" unique_id=514911720]
+layout_mode = 2
+size_flags_vertical = 4
+theme = ExtResource("2_ksbef")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Key3" unique_id=1055284666]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="VBoxContainer/Key3/MarginContainer" unique_id=850226768]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/Key3/MarginContainer/HboxContainer" unique_id=307822450]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Право"
+
+[node name="Value" type="Label" parent="VBoxContainer/Key3/MarginContainer/HboxContainer" unique_id=476843266]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "D, arrow_right"
+
+[node name="Key4" type="PanelContainer" parent="VBoxContainer" unique_id=1910802234]
+layout_mode = 2
+size_flags_vertical = 4
+theme = ExtResource("2_ksbef")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Key4" unique_id=1313233706]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="VBoxContainer/Key4/MarginContainer" unique_id=1601070603]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/Key4/MarginContainer/HboxContainer" unique_id=2145727222]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Действие"
+
+[node name="Value" type="Label" parent="VBoxContainer/Key4/MarginContainer/HboxContainer" unique_id=1020330932]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "E"
+
+[node name="Key5" type="PanelContainer" parent="VBoxContainer" unique_id=978391451]
+layout_mode = 2
+size_flags_vertical = 4
+theme = ExtResource("2_ksbef")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Key5" unique_id=117177231]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="VBoxContainer/Key5/MarginContainer" unique_id=1398629399]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/Key5/MarginContainer/HboxContainer" unique_id=2118208676]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Войти в дверь"
+
+[node name="Value" type="Label" parent="VBoxContainer/Key5/MarginContainer/HboxContainer" unique_id=1837661596]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "W, arrow_up"
+
+[node name="Key6" type="PanelContainer" parent="VBoxContainer" unique_id=2026465292]
+layout_mode = 2
+size_flags_vertical = 4
+theme = ExtResource("2_ksbef")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Key6" unique_id=886534171]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="VBoxContainer/Key6/MarginContainer" unique_id=2107394259]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/Key6/MarginContainer/HboxContainer" unique_id=328575432]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Открыть инвентарь"
+
+[node name="Value" type="Label" parent="VBoxContainer/Key6/MarginContainer/HboxContainer" unique_id=596945975]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Tab"
+
+[node name="Key7" type="PanelContainer" parent="VBoxContainer" unique_id=375844747]
+layout_mode = 2
+size_flags_vertical = 4
+theme = ExtResource("2_ksbef")
+theme_type_variation = &"PanelContainerBround"
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Key7" unique_id=1199033912]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HboxContainer" type="HBoxContainer" parent="VBoxContainer/Key7/MarginContainer" unique_id=1902005227]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="VBoxContainer/Key7/MarginContainer/HboxContainer" unique_id=382547158]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Открыть меню, если в игре"
+
+[node name="Value" type="Label" parent="VBoxContainer/Key7/MarginContainer/HboxContainer" unique_id=1899568682]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Esc"

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WeaponItemResource" load_steps=3 format=3 uid="uid://dmm422ya1hibr"]
+
+[ext_resource type="Texture2D" uid="uid://q7tee50imp5h" path="res://shared/assets/images/pickaxe.png" id="1_tkter"]
+[ext_resource type="Script" uid="uid://bo2bcqarrep21" path="res://shared/objects/items/resources/weapon_item_resource.gd" id="2_ls7vt"]
+
+[resource]
+script = ExtResource("2_ls7vt")
+damage = 15.0
+range_weapon = 150.0
+energy_change_pre_use = -0.8
+item_key = 13
+display_name = "Кирка"
+icon = ExtResource("1_tkter")
+description = "Инструмент для добычи каменных пород"
+is_equippable = true
+metadata/_custom_type_script = "uid://b5sp5k3gqh1tj"

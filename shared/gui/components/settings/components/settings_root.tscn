@@ -1,0 +1,49 @@
+[gd_scene load_steps=5 format=3 uid="uid://c7nu2u8dxyrqj"]
+
+[ext_resource type="Script" uid="uid://w3u4un5u0sfy" path="res://shared/gui/components/settings/components/settings_root.gd" id="1_uv4r1"]
+[ext_resource type="Theme" uid="uid://due8olnny4q8h" path="res://shared/theme/theme.tres" id="2_u4ppg"]
+[ext_resource type="PackedScene" uid="uid://dkyhdyf0pdum2" path="res://shared/gui/components/settings/components/settings/settings.tscn" id="3_uv4r1"]
+[ext_resource type="PackedScene" uid="uid://dmvvas2ckyspc" path="res://shared/gui/components/settings/components/сontrols/сontrols.tscn" id="4_3wpy8"]
+
+[node name="Settings" type="MarginContainer" unique_id=147333781]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_uv4r1")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=1031450862]
+custom_minimum_size = Vector2(700, 400)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme = ExtResource("2_u4ppg")
+theme_type_variation = &"PanelContainerMetal"
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=2107339132]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer" unique_id=1307071374]
+layout_mode = 2
+
+[node name="Tabs" type="TabBar" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1356322911]
+unique_name_in_owner = true
+layout_mode = 2
+current_tab = 0
+tab_count = 2
+tab_0/title = "Настройки"
+tab_1/title = "Управление"
+
+[node name="SettingsContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=99625293 instance=ExtResource("3_uv4r1")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ControlsContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1367743558 instance=ExtResource("4_3wpy8")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2

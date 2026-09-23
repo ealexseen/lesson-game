@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://dhdghvpymvg1l"]
+
+[ext_resource type="PackedScene" uid="uid://b21j4acvsn5wu" path="res://shared/objects/hitbox/hitbox.tscn" id="1_52gtm"]
+[ext_resource type="Script" uid="uid://dvhgi528vqcx8" path="res://shared/actors/animals/animal_template/animal_template.gd" id="1_yaft8"]
+
+[node name="AnimalTemplate" type="CharacterBody2D" unique_id=503981069]
+collision_layer = 1024
+collision_mask = 1538
+script = ExtResource("1_yaft8")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=329876229]
+unique_name_in_owner = true
+
+[node name="Hitbox" parent="." unique_id=381861715 instance=ExtResource("1_52gtm")]
+unique_name_in_owner = true
+
+[node name="Timers" type="Node" parent="." unique_id=928661000]
+
+[node name="IdleTimer" type="Timer" parent="Timers" unique_id=702902633]
+unique_name_in_owner = true
+one_shot = true
+autostart = true
+
+[node name="WanderTimer" type="Timer" parent="Timers" unique_id=901992789]
+unique_name_in_owner = true
+one_shot = true
+
+[node name="DisappearAfterDeathTimer" type="Timer" parent="Timers" unique_id=230674241]
+unique_name_in_owner = true
+one_shot = true
+
+[node name="MeatSpawnMarker" type="Marker2D" parent="." unique_id=504379604]
+unique_name_in_owner = true

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ConsumableItemResource" load_steps=3 format=3 uid="uid://cbvj72abkkx8r"]
+
+[ext_resource type="Texture2D" uid="uid://baa0fhn2g1kif" path="res://shared/assets/images/raw-meat.png" id="1_g24lf"]
+[ext_resource type="Script" uid="uid://ebxkfdgoilho" path="res://shared/objects/items/resources/consumable_item_resource.gd" id="2_qealc"]
+
+[resource]
+script = ExtResource("2_qealc")
+health_change = -5.0
+enegry_change = 5.0
+mana_change = 0.0
+item_key = 10
+display_name = "Сырое мясо"
+icon = ExtResource("1_g24lf")
+description = "Сырое мясо которое можно приготовить"
+is_equippable = true
+metadata/_custom_type_script = "uid://ebxkfdgoilho"

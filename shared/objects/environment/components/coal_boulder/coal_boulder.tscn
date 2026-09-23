@@ -1,0 +1,38 @@
+[gd_scene load_steps=4 format=3 uid="uid://db8m1bwc6n0rk"]
+
+[ext_resource type="PackedScene" uid="uid://ca3o1nkss4id1" path="res://shared/objects/environment/components/template/hittable_object_template/hittable_object_template.tscn" id="1_87rvh"]
+[ext_resource type="Resource" uid="uid://dahp3d6broibx" path="res://shared/objects/environment/resources/coal_boulder_attributes.tres" id="2_fibuq"]
+[ext_resource type="Texture2D" uid="uid://drbvdklj7thyk" path="res://shared/assets/images/coal-boulder.png" id="3_fibuq"]
+
+[node name="CoalBoulder" unique_id=1335046046 instance=ExtResource("1_87rvh")]
+position = Vector2(0, 24)
+attributes = ExtResource("2_fibuq")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" parent_id_path=PackedInt32Array(194205188) index="0" unique_id=1270554226]
+position = Vector2(0, -84.000015)
+scale = Vector2(0.26, 0.26)
+polygon = PackedVector2Array(14.5, -407, -11.5, -407, -347.6, -321, -352.2, -321, -360.2, -315, -362, -315, -364, -308, -365.4, -308, -378.5, -119.100006, -378.5, -107.70001, -496.5, 48, -496.5, 69.899994, -492.5, 76.5, -492.5, 79.5, -420.5, 223.5, -420.5, 226, -413.5, 231, -413.5, 232.5, -245.8, 277, -243.2, 277, -86.5, 406.90002, -58.700012, 407, 96.5, 351.40002, 96.5, 350.8, 333.7, 328, 338.40002, 328, 350.5, 313.7, 350.5, 305.90002, 326.5, 121.70001, 326.5, 119.70001, 496.40002, -84, 496.5, -105.600006, 493.5, -108, 493.5, -108.899994, 309.5, -267.9, 309.5, -270.6, 160.40002, -233, 157.79999, -233, 125.5, -299.5, 125.5, -301.9)
+
+[node name="Marker2D" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="0" unique_id=750583480]
+position = Vector2(-11, -45)
+rotation = 1.5707964
+
+[node name="Marker2D2" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="1" unique_id=855248503]
+position = Vector2(-75, -92)
+rotation = 1.5707964
+
+[node name="Marker2D3" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="2" unique_id=780235769]
+position = Vector2(68, -97)
+rotation = 1.5707964
+
+[node name="Marker2D4" type="Marker2D" parent="ItemSpawnPoints" parent_id_path=PackedInt32Array(1542743920) index="3" unique_id=1225585990]
+position = Vector2(-15, -148)
+rotation = 1.5707964
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Hitbox" parent_id_path=PackedInt32Array(1962271803) index="0" unique_id=2061018382]
+polygon = PackedVector2Array(90, -3, 84, -53, 130, -109, 79, -154, 41, -144, 31, -164, 2, -191, -94, -165, -98, -111, -129, -70, -108, -24, -63, -12, -21, 23, 26, 6)
+
+[node name="CoalBoulder" type="Sprite2D" parent="WrapperImage" parent_id_path=PackedInt32Array(1623845633) index="0" unique_id=223586669]
+position = Vector2(0, -84.000015)
+scale = Vector2(0.26, 0.26)
+texture = ExtResource("3_fibuq")

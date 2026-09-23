@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3 uid="uid://bcbtv161liqw3"]
+
+[ext_resource type="PackedScene" uid="uid://d4kkomcpdynfb" path="res://shared/objects/items/components/items/base_item/base_item.tscn" id="1_hpu8q"]
+[ext_resource type="Texture2D" uid="uid://sgjs7vpi7vjs" path="res://shared/assets/images/coal.png" id="2_j1wq4"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_j1wq4"]
+radius = 15.25
+
+[node name="CoalItem" unique_id=874065668 instance=ExtResource("1_hpu8q")]
+
+[node name="Pickuppable" parent="." index="0" unique_id=935353379]
+item_key = 3
+
+[node name="TextureRect" parent="Pickuppable" index="1" unique_id=293043908]
+offset_left = -15.0
+offset_top = -15.0
+offset_right = 15.0
+offset_bottom = 15.0
+texture = ExtResource("2_j1wq4")
+
+[node name="CollisionShape2D" parent="Pickuppable" index="2" unique_id=1046201066]
+shape = SubResource("CircleShape2D_j1wq4")
