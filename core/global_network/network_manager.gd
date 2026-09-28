@@ -19,6 +19,7 @@ enum Mode { OFFLINE, HOST, CLIENT }
 
 const DEFAULT_PORT := 8910
 const GAME_SCENE_PATH := "res://core/scenes/map_1/map_1.tscn"
+const MENU_SCENE_PATH := "res://core/scenes/menu/menu.tscn"
 const HANDSHAKE_TIMEOUT := 5.0
 const DEFAULT_NAME := "Игрок"
 # пауза перед отключением отклонённого клиента, чтобы причина успела дойти
@@ -27,6 +28,8 @@ const REJECT_GRACE := 0.4
 var mode: Mode = Mode.OFFLINE
 var player_name: String = DEFAULT_NAME
 var lan: LanDiscovery
+## Сообщение для следующего экрана (например, почему выкинуло из игры).
+var last_notice: String = ""
 
 # хост занимает одно место из MatchState.MAX_PLAYERS
 var max_clients: int = MatchState.MAX_PLAYERS - 1
@@ -242,12 +245,24 @@ func _on_server_disconnected() -> void:
 	
 	# отключение до окончания рукопожатия — это отказ, а не уход хоста
 	var rejected := _rejected or not _accepted
+	var in_game := _in_game_scene()
 	disconnect_game()
 	
 	if rejected:
 		join_rejected.emit("Хост отклонил подключение")
-	else:
-		server_disconnected.emit("Хост закрыл игру")
+		return
+	
+	server_disconnected.emit("Хост закрыл игру")
+	
+	if in_game:
+		# иначе игрок останется в замершем мире без сервера
+		last_notice = "Хост закрыл игру"
+		get_tree().change_scene_to_file(MENU_SCENE_PATH)
+
+
+func _in_game_scene() -> bool:
+	var scene := get_tree().current_scene
+	return scene != null and scene.scene_file_path.ends_with("map_1.tscn")
 
 
 # Рукопожатие и список участников

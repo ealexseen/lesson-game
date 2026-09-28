@@ -17,7 +17,7 @@ signal UI_last()
 signal UI_check_count(_count_ui: int)
 
 # inventory
-signal INV_try_to_pickup_item(_player: Player, _item_key: ItemConfig.Keys, _callback: Callable)
+signal INV_try_to_pickup_item(_player: Player, _item_key: ItemConfig.Keys, _item: Node)
 signal INV_ask_update_inventory(_player: Player)
 signal INV_inventory_updated(_player: Player, _inventory: Array)
 signal INV_switch_two_item_indexes(

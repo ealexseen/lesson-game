@@ -11,6 +11,9 @@ class_name Player
 
 const REMOTE_SMOOTH_SPEED := 15.0 # плавность чужого игрока
 const REMOTE_TELEPORT_DISTANCE := 300.0 # скачок сетевой цели — это телепорт
+const VISIBILITY_RADIUS := 1500.0 # дальше не шлём своё движение
+const VISIBILITY_HYSTERESIS := 250.0 # чтобы не мигало на границе
+const VISIBILITY_INTERVAL := 0.5 # как часто пересчитываем видимость
 
 @onready var equippable_item_holder: EquippableItemHolder = %EquippableItemHolder
 @onready var camera: Camera2D = $Camera2D
@@ -22,6 +25,8 @@ var save_equippable_item_holder_position = Vector2.ZERO
 
 var abilities: Dictionary = {}
 var can_shoot: bool = true
+var _visibility_elapsed := 0.0
+var _visible_cache: Dictionary[int, bool] = {}
 
 # Получаем гравитацию из проекта
 var gravity: float = ProjectSettings.get_setting('physics/2d/default_gravity')
@@ -44,6 +49,15 @@ func _ready() -> void:
 	# цель стартует на месте появления, иначе чужой игрок поедет к нулю
 	net_target.position = position
 	_setup_nameplate()
+	
+	if is_local():
+		# новый пир по умолчанию «видим», гасим это сразу, пока он не на карте
+		multiplayer.peer_connected.connect(_on_peer_connected)
+		MatchState.participants_changed.connect(_apply_visibility)
+
+
+func _on_peer_connected(_peer_id: int) -> void:
+	_apply_visibility()
 
 
 ## Ник и цвет показываем только у чужих игроков: своя табличка перед глазами мешает.
@@ -62,8 +76,64 @@ func is_local() -> bool:
 	return MatchState.local_player == self
 
 
+# Интерес к игроку: далёким пирам своё движение не шлём — это главный рычаг трафика.
+
+func _tick_visibility(_delta: float) -> void:
+	if not NetworkManager.is_connected_to_game():
+		return
+	
+	_visibility_elapsed += _delta
+	
+	if _visibility_elapsed < VISIBILITY_INTERVAL:
+		return
+	
+	_visibility_elapsed = 0.0
+	_apply_visibility()
+
+
+func _apply_visibility() -> void:
+	# состав может меняться и при отключении, когда пира уже нет
+	if not NetworkManager.is_connected_to_game():
+		return
+	
+	var synchronizer: MultiplayerSynchronizer = net_target.get_node_or_null("MultiplayerSynchronizer")
+	
+	if synchronizer == null:
+		return
+	
+	for peer_id in multiplayer.get_peers():
+		synchronizer.set_visibility_for(peer_id, _is_visible_to(peer_id))
+	
+	synchronizer.update_visibility()
+
+
+func _is_visible_to(_peer_id: int) -> bool:
+	# пока пир не на карте, у него нет наших узлов — слать ему нечего
+	if not WorldSync.is_peer_in_world(_peer_id):
+		return false
+	
+	# серверу движение нужно всегда: он проверяет удары и рассылает мир
+	if _peer_id == 1:
+		return true
+	
+	var other: Player = MatchState.players.get(_peer_id)
+	
+	if other == null:
+		return false
+	
+	var limit := VISIBILITY_RADIUS
+	
+	if _visible_cache.get(_peer_id, false):
+		limit += VISIBILITY_HYSTERESIS
+	
+	var visible := global_position.distance_to(other.global_position) <= limit
+	_visible_cache[_peer_id] = visible
+	return visible
+
+
 func _process(_delta: float) -> void:
 	if is_local():
+		_tick_visibility(_delta)
 		return
 	
 	# чужой игрок плавно едет за сетевой целью: своей физикой он не управляет

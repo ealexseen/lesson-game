@@ -25,7 +25,9 @@ var _hint_elapsed := 0.0
 func _ready() -> void:
 	name_input.text = NetworkManager.player_name
 	address_input.text = DEFAULT_ADDRESS
-	_set_status("")
+	# например, «Хост закрыл игру» после выхода из игры
+	_set_status(NetworkManager.last_notice)
+	NetworkManager.last_notice = ""
 	
 	host_button.pressed.connect(_on_host_pressed)
 	join_button.pressed.connect(_on_join_pressed)

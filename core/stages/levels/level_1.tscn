@@ -293,7 +293,7 @@ door_to = NodePath("../Door4")
 position = Vector2(301, -968)
 door_to = NodePath("../Door2")
 
-[node name="ManagerSpawner" parent="." instance=ExtResource("11_pifw4")]
+[node name="ManagerSpawner" parent="." groups=["world_spawner"] instance=ExtResource("11_pifw4")]
 
 [node name="Mobs" type="Node" parent="."]
 

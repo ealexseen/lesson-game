@@ -20,6 +20,10 @@ func _ready() -> void:
 	body_exited.connect(_on_body_exited)
 
 
+func is_open() -> bool:
+	return _is_open
+
+
 func _input(event: InputEvent) -> void:
 	if (!door_to): return
 	if (event is InputEventKey):
@@ -31,6 +35,7 @@ func _input(event: InputEvent) -> void:
 			
 		if (event.keycode == KEY_UP or event.keycode == KEY_W):
 			if (_is_open and player):
+				# телепорт двигает только своего игрока, позиция уедет по сети
 				player.position = Vector2(door_to.position.x, door_to.position.y - 70)
 				
 				_is_open = false
@@ -57,9 +62,19 @@ func _init_prompt() -> void:
 		set_prompt('Hажми E чтобы открыть')
 		
 
-
+## Состояние двери должно совпадать у всех: сообщаем остальным пирам.
 func _open_door(value: bool) -> void:
 	_is_open = value
+	
+	_init_prompt()
+	
+	if NetworkManager.is_connected_to_game():
+		rpc("_apply_door_state", value)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _apply_door_state(_value: bool) -> void:
+	_is_open = _value
 	
 	_init_prompt()
 

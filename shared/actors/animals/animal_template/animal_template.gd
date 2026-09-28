@@ -94,13 +94,30 @@ func set_state(new_state: States) -> void:
 			animated_sprite_2d.play('death')
 			main_collision_shape.disabled = true
 			
-			var meat_scene := ItemConfig.get_pickuppable_item(ItemConfig.Keys.RawMeat)
+			# мясо и учёт смерти — дело сервера, остальным он пришлёт спавн
+			if WorldSync.is_server():
+				_spawn_meat()
+				WorldSync.mark_dead(self)
 			
-			EventSystem.SPA_spawn_scene.emit(meat_scene, meat_spawn_marker.global_transform)
 			idle_timer.stop()
 			wander_timer.stop()
 			set_physics_process(false)
 			disappear_after_death_timer.start(10)
+
+
+func _spawn_meat() -> void:
+	var meat_scene := ItemConfig.get_pickuppable_item(ItemConfig.Keys.RawMeat)
+	
+	if meat_scene == null:
+		return
+	
+	EventSystem.SPA_spawn_scene.emit(meat_scene, meat_spawn_marker.global_transform)
+
+
+## Приказ сервера: моб убит, мясо придёт отдельным спавном.
+func apply_remote_death() -> void:
+	set_state(States.Dead)
+
 
 # Сигналы
 func _on_animation_finished() -> void:
@@ -120,8 +137,11 @@ func _on_disappear_after_death_timer() -> void:
 	queue_free()
 
 
+## Урон применяет только сервер: клиентам приходит готовый результат.
 func _on_register_hit(weapon_item_resource: WeaponItemResource) -> void:
-	print(weapon_item_resource, 'weapon_item_resource [TEST]')
+	if not WorldSync.is_server():
+		return
+	
 	health -= weapon_item_resource.damage
 	
 	if state != States.Dead and health <= 0:

@@ -26,6 +26,7 @@ EventSystem="*res://core/global_events/event_system.gd"
 GlobalSettings="*res://core/global_settings/settings.gd"
 MatchState="*res://core/global_match/match_state.gd"
 NetworkManager="*res://core/global_network/network_manager.gd"
+WorldSync="*res://core/global_world/world_sync.gd"
 
 [debug]
 

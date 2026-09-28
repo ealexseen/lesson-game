@@ -3,31 +3,28 @@ class_name PickuppableItem extends InteractablesItem
 @export var item_key: ItemConfig.Keys
 
 var pickup_active = false
-var parent
 
 
 func _ready() -> void:
 	body_entered.connect(on_body_entered)
 	body_exited.connect(on_body_exited)
-	
-	parent = get_parent()
+
+
+## Корень предмета: сцена предмета — родитель этой зоны взаимодействия.
+func item_root() -> Node:
+	return get_parent()
 
 
 func start_interaction() -> void:
-	EventSystem.INV_try_to_pickup_item.emit(MatchState.local_player, item_key, destroy_self)
+	EventSystem.INV_try_to_pickup_item.emit(
+		MatchState.local_player, item_key, item_root()
+	)
 
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed('active'):
 		if pickup_active:
 			start_interaction()
-
-
-func destroy_self() -> void:
-	if not parent:
-		return
-	
-	parent.queue_free()
 
 
 func set_pickup_active(value: bool) -> void:
@@ -39,8 +36,6 @@ func set_pickup_active(value: bool) -> void:
 		set_prompt('Нажмите E')
 	else:
 		set_prompt(resource_item.display_name)
-	
-	
 
 
 func on_body_entered(_body: Node2D) -> void:

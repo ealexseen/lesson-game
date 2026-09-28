@@ -1,35 +1,67 @@
 class_name NetworkSmokeProbe extends Node
 
-## Логика сетевого смоука этапов M1–M2. Запускается двумя-тремя процессами:
+## Логика сетевого смоука этапов M1–M4. Запускается двумя-тремя процессами:
 ##
 ##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autohost --name=Host --password=secret
 ##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --name=Client --password=secret
 ##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --password=wrong --expect-reject
 ##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --lan-search
-##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autohost --name=Host --start-game
-##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --name=Client --expect-game
+##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autohost --name=Host --start-game [--world]
+##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autohost --name=Host --solo-start --world
+##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --name=Client --expect-game [--world]
+##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autohost --name=Host --stress --hold=20
+##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --name=Bot1 --bot --hold=20
 ##
 ## Успех печатает SMOKE CLIENT CONNECTED / SMOKE CLIENT REJECTED: … / SMOKE LAN FOUND n /
-## SMOKE CLIENT SEES MOTION. Жёсткий таймаут гарантирует выход даже при ошибке.
+## SMOKE CLIENT SEES MOTION / SMOKE CLIENT SEES TREE GONE / SMOKE CLIENT WORLD OK /
+## SMOKE STRESS OK / SMOKE BOT DONE.
+## Жёсткий таймаут гарантирует выход даже при ошибке.
 
 const CLIENT_TIMEOUT := 8.0
 const HOST_WAIT_PLAYERS := 20.0
 const HOST_LIFETIME := 25.0
 const GAME_SETTLE_TIME := 8.0
 const GAME_WATCH_TIME := 12.0
-const HARD_TIMEOUT := 60.0
+const WORLD_WATCH_TIME := 30.0
 const LAN_SEARCH_TIME := 5.0
 const MOTION_DELTA := 200.0
 const HOST_MOVE := Vector2(400.0, 0.0)
+const HARD_TIMEOUT := 60.0
+const STRESS_HOLD := 25.0
+const BOT_STEP := 5.0
+const REPORT_DIR := "res://_dsh_reports/"
+
+# тайминги мира: считаются от момента, когда карта загрузилась
+const BREAK_DELAY := 6.0
+const PICKUP_DELAY := 9.0
+const PICKUP_CHECK_DELAY := 1.5
+const HITS_TO_BREAK := 40
+const RAY_HALF := 40.0
+const RAY_HEIGHTS := [40.0, 100.0, 160.0, 220.0]
 
 var _args := {}
 var _elapsed := 0.0
 var _finished := false
 var _expect_reject := false
 var _game_started_at := -1.0
+var _world_started_at := -1.0
 var _host_moved := false
 var _client_checked := false
 var _watch_position := Vector2.ZERO
+
+var _motion_seen := false
+var _tree_path := ""
+var _tree_gone := false
+var _break_attempted := false
+var _loot_reported := false
+var _pickup_item_path := ""
+var _pickup_slots_before := -1
+var _pickup_asked := false
+var _pickup_checked := false
+var _bot_phase := -1
+var _net_cached := ""
+var _fail_reason := ""
+var _fail_at := 0.0
 
 
 func _ready() -> void:
@@ -39,6 +71,7 @@ func _ready() -> void:
 	
 	print("SMOKE ARGS: ", _args)
 	_expect_reject = _args.has("expect-reject")
+	_write_report(0, "started")
 	
 	if not is_instance_valid(NetworkManager):
 		_finish(1, "SMOKE FAIL: автолоад NetworkManager недоступен")
@@ -66,9 +99,15 @@ func _process(_delta: float) -> void:
 	
 	_elapsed += _delta
 	
+	if _fail_at > 0.0 and _elapsed >= _fail_at:
+		_finish(1, "SMOKE FAIL: %s" % _fail_reason)
+		return
+	
 	if _elapsed >= HARD_TIMEOUT:
 		_finish(1, "SMOKE FAIL: общий таймаут %.0f с" % HARD_TIMEOUT)
 		return
+	
+	_track_world_time()
 	
 	if _args.has("autohost"):
 		_tick_host()
@@ -78,14 +117,108 @@ func _process(_delta: float) -> void:
 		_finish(1, "SMOKE LAN FAIL: хосты не найдены за %.0f с" % LAN_SEARCH_TIME)
 
 
+func _track_world_time() -> void:
+	if _world_started_at >= 0.0:
+		return
+	if MatchState.local_player == null:
+		return
+	
+	_world_started_at = _elapsed
+
+
+func _world_elapsed() -> float:
+	if _world_started_at < 0.0:
+		return 0.0
+	return _elapsed - _world_started_at
+
+
+## Стресс: поднять игру и держать её, пока боты подключаются и ходят.
+func _tick_host_stress() -> void:
+	if _game_started_at < 0.0:
+		_game_started_at = _elapsed
+		NetworkManager.start_game()
+		print("SMOKE HOST STARTS GAME")
+		return
+	
+	if _world_started_at < 0.0:
+		if _elapsed - _game_started_at > GAME_SETTLE_TIME:
+			_finish(1, "SMOKE HOST FAIL: игрок не появился в мире")
+		return
+	
+	if _world_elapsed() < _hold_seconds():
+		return
+	
+	print("SMOKE STRESS players=%d peers=%d %s" % [
+		MatchState.player_count(), multiplayer.get_peers().size(), _net_report()
+	])
+	_finish(0, "SMOKE STRESS OK")
+
+
+func _hold_seconds() -> float:
+	if _args.has("hold"):
+		return float(_args["hold"])
+	
+	return STRESS_HOLD
+
+
+## Сколько байт ушло и пришло за сессию (счётчики ENet, читаются с обнулением).
+func _net_report() -> String:
+	if _net_cached != "":
+		return _net_cached
+	
+	var peer := multiplayer.multiplayer_peer
+	
+	if not (peer is ENetMultiplayerPeer):
+		return "net=нет ENet"
+	
+	var connection := (peer as ENetMultiplayerPeer).host
+	
+	if connection == null:
+		return "net=нет соединения"
+	
+	var sent := int(connection.pop_statistic(ENetConnection.HOST_TOTAL_SENT_DATA))
+	var received := int(connection.pop_statistic(ENetConnection.HOST_TOTAL_RECEIVED_DATA))
+	
+	_net_cached = "sent=%d received=%d" % [sent, received]
+	return _net_cached
+
+
 func _finish(_code: int, _message: String) -> void:
 	_finished = true
 	print(_message)
+	_write_report(_code, _message)
 	
 	if is_instance_valid(NetworkManager):
 		NetworkManager.disconnect_game()
 	
 	get_tree().quit(_code)
+
+
+## Отчёт в файл: у процессов, запущенных через Start-Process, stdout буферизуется
+## и хвост теряется, поэтому итог пишем ещё и в файл (--report=<имя файла>).
+func _write_report(_code: int, _message: String) -> void:
+	if not _args.has("report"):
+		return
+	
+	var file := FileAccess.open(REPORT_DIR + str(_args["report"]), FileAccess.WRITE)
+	
+	if file == null:
+		return
+	
+	file.store_line("%s | exit=%d players=%d peers=%d scene=%s %s" % [
+		_message, _code, MatchState.player_count(),
+		multiplayer.get_peers().size(), _current_scene_path(), _net_report()
+	])
+	file.close()
+
+
+func _current_scene_path() -> String:
+	var scene := get_tree().current_scene
+	
+	if scene == null:
+		return "-"
+	
+	return scene.scene_file_path.get_file()
 
 
 func _name() -> String:
@@ -122,14 +255,22 @@ func _start_lan_search() -> void:
 # Хост
 
 func _tick_host() -> void:
-	if not _args.has("start-game"):
+	if _args.has("stress"):
+		_tick_host_stress()
+		return
+	
+	if not _args.has("start-game") and not _args.has("solo-start"):
 		if _elapsed >= HOST_LIFETIME:
 			_finish(0, "SMOKE HOST DONE")
 		return
 	
 	# ждём второго участника и начинаем игру
 	if _game_started_at < 0.0:
-		if MatchState.participants.size() >= 2 or _elapsed >= HOST_WAIT_PLAYERS:
+		if (
+			_args.has("solo-start")
+			or MatchState.participants.size() >= 2
+			or _elapsed >= HOST_WAIT_PLAYERS
+		):
 			_game_started_at = _elapsed
 			NetworkManager.start_game()
 			print("SMOKE HOST STARTS GAME")
@@ -151,14 +292,64 @@ func _tick_host() -> void:
 		print("SMOKE HOST COLOR: %s" % MatchState.participant_color(1).to_html(false))
 		return
 	
+	if _args.has("world"):
+		_tick_host_world()
+		return
+	
 	if _elapsed - _game_started_at > GAME_WATCH_TIME:
 		_finish(0, "SMOKE HOST DONE")
+
+
+func _tick_host_world() -> void:
+	if not _tree_gone and _tree_path != "" and get_node_or_null(_tree_path) == null:
+		_tree_gone = true # queue_free срабатывает в конце кадра
+	
+	if not _break_attempted and _world_elapsed() >= BREAK_DELAY:
+		_break_attempted = true
+		_break_tree()
+	
+	if not _pickup_asked and _world_elapsed() >= PICKUP_DELAY:
+		_try_pickup("HOST")
+	
+	if _pickup_asked and not _pickup_checked and _world_elapsed() >= PICKUP_DELAY + PICKUP_CHECK_DELAY:
+		_check_pickup("HOST")
+	
+	if _world_elapsed() < WORLD_WATCH_TIME:
+		return
+	
+	print("SMOKE HOST SUMMARY: tree_gone=%s loot=%d" % [_tree_gone, _loot_count()])
+	_finish(0, "SMOKE HOST DONE")
+
+
+func _break_tree() -> void:
+	var tree := _find_hittable()
+	
+	if tree == null:
+		_finish(1, "SMOKE HOST FAIL: не нашёл объект для удара")
+		return
+	
+	_tree_path = str(tree.get_path())
+	var center: Vector2 = tree.global_position
+	
+	# бьём на нескольких высотах: хитбокс у ствола выше основания
+	for _i in HITS_TO_BREAK:
+		for height in RAY_HEIGHTS:
+			WorldSync.apply_hit(
+				center + Vector2(-RAY_HALF, -height),
+				center + Vector2(RAY_HALF, -height),
+				ItemConfig.Keys.Axe
+			)
+	
+	_tree_gone = get_node_or_null(_tree_path) == null
+	print("SMOKE HOST TREE BROKEN: %s" % _tree_path)
+	print("SMOKE HOST TREE GONE: %s" % _tree_gone)
+	print("SMOKE HOST LOOT: %d" % _loot_count())
 
 
 # Клиент
 
 func _tick_client() -> void:
-	if not _args.has("expect-game"):
+	if not _args.has("expect-game") and not _args.has("bot"):
 		return
 	
 	if MatchState.local_player == null:
@@ -166,20 +357,97 @@ func _tick_client() -> void:
 			_finish(1, "SMOKE CLIENT FAIL: игрок не появился в мире")
 		return
 	
+	if _args.has("bot"):
+		_tick_bot()
+		return
+	
 	if not _client_checked:
 		_client_checked = true
 		_check_client_game()
 		return
 	
+	_tick_client_motion()
+	
+	if not _args.has("world"):
+		if _motion_seen:
+			_finish(0, "SMOKE CLIENT SEES MOTION")
+		elif _elapsed >= GAME_WATCH_TIME + CLIENT_TIMEOUT:
+			_finish(1, "SMOKE CLIENT FAIL: движение хоста не дошло")
+		return
+	
+	_tick_client_world()
+
+
+func _tick_client_motion() -> void:
+	if _motion_seen:
+		return
+	
 	var host_player: Player = MatchState.players.get(1)
 	
 	if host_player != null and host_player.net_target.position.distance_to(_watch_position) > MOTION_DELTA:
+		_motion_seen = true
 		print("SMOKE CLIENT SEES MOTION: ", host_player.net_target.position)
-		_finish(0, "SMOKE CLIENT SEES MOTION")
+
+
+func _tick_client_world() -> void:
+	_remember_tree()
+	
+	if not _tree_gone and _tree_path != "" and get_node_or_null(_tree_path) == null:
+		_tree_gone = true
+		print("SMOKE CLIENT SEES TREE GONE")
+	
+	if _tree_gone and not _loot_reported:
+		_loot_reported = true
+		print("SMOKE CLIENT LOOT: %d" % _loot_count())
+	
+	if not _pickup_asked and _world_elapsed() >= PICKUP_DELAY:
+		_try_pickup("CLIENT")
+	
+	if _pickup_asked and not _pickup_checked and _world_elapsed() >= PICKUP_DELAY + PICKUP_CHECK_DELAY:
+		_check_pickup("CLIENT")
+	
+	if _tree_gone and _pickup_checked:
+		_finish(0, "SMOKE CLIENT WORLD OK")
 		return
 	
-	if _elapsed >= GAME_WATCH_TIME + CLIENT_TIMEOUT:
-		_finish(1, "SMOKE CLIENT FAIL: движение хоста не дошло")
+	if _world_elapsed() >= WORLD_WATCH_TIME:
+		_finish(1, "SMOKE CLIENT FAIL: tree_gone=%s pickup=%s" % [
+			_tree_gone, _pickup_checked
+		])
+
+
+func _remember_tree() -> void:
+	if _tree_path != "":
+		return
+	
+	var tree := _find_hittable()
+	
+	if tree != null:
+		_tree_path = str(tree.get_path())
+		print("SMOKE WORLD TREE PATH: %s" % _tree_path)
+
+
+## Бот для стресса: ходит влево-вправо и в конце отчитывается о трафике.
+func _tick_bot() -> void:
+	if not _client_checked:
+		_client_checked = true
+		print("SMOKE BOT READY players=%d" % MatchState.player_count())
+	
+	var phase := int(_elapsed / BOT_STEP) % 2
+	
+	if phase != _bot_phase:
+		_bot_phase = phase
+		Input.action_release("left")
+		Input.action_release("right")
+		Input.action_press("left" if phase == 0 else "right")
+	
+	if _elapsed < _hold_seconds():
+		return
+	
+	Input.action_release("left")
+	Input.action_release("right")
+	print("SMOKE BOT DONE players=%d %s" % [MatchState.player_count(), _net_report()])
+	_finish(0, "SMOKE BOT DONE")
 
 
 func _check_client_game() -> void:
@@ -231,10 +499,135 @@ func _check_client_game() -> void:
 	print("SMOKE CLIENT WATCH: ", _watch_position)
 
 
+# Подбор предмета: обе стороны целятся в один и тот же предмет
+
+func _try_pickup(_who: String) -> void:
+	_pickup_asked = true
+	_pickup_slots_before = _free_slots()
+	
+	var item := _find_shared_item()
+	
+	if item == null:
+		print("SMOKE PICKUP %s: предмет не найден" % _who)
+		_pickup_item_path = ""
+		return
+	
+	var pickuppable: PickuppableItem = item.get_node_or_null("Pickuppable")
+	
+	if pickuppable == null:
+		print("SMOKE PICKUP %s: у предмета нет зоны подбора" % _who)
+		_pickup_item_path = ""
+		return
+	
+	_pickup_item_path = str(item.get_path())
+	print("SMOKE PICKUP %s ASKS: %s" % [_who, _pickup_item_path])
+	WorldSync.request_pickup(item, MatchState.local_player, pickuppable.item_key)
+
+
+func _check_pickup(_who: String) -> void:
+	_pickup_checked = true
+	
+	var after := _free_slots()
+	var won := after >= 0 and _pickup_slots_before >= 0 and after < _pickup_slots_before
+	var gone := _pickup_item_path != "" and get_node_or_null(_pickup_item_path) == null
+	
+	print("SMOKE PICKUP %s: %s free=%d→%d item_gone=%s" % [
+		_who, "won" if won else "lost", _pickup_slots_before, after, gone
+	])
+
+
+# Вспомогательное
+
+func _free_slots() -> int:
+	var player := MatchState.local_player
+	
+	if player == null:
+		return -1
+	
+	var inventory := player.get_node_or_null("Managers/ManagerInventory")
+	
+	if inventory == null:
+		return -1
+	
+	return inventory.get_free_slots()
+
+
+func _loot_count() -> int:
+	# группа задана в level_1.tscn на узле ManagerSpawner
+	var spawner := get_tree().get_first_node_in_group("world_spawner")
+	
+	if spawner == null:
+		return -1
+	
+	var items := spawner.get_node_or_null("Items")
+	
+	if items == null:
+		return -1
+	
+	return items.get_child_count()
+
+
+func _level_root() -> Node:
+	var scene := get_tree().current_scene
+	
+	if scene == null:
+		return null
+	
+	var stage := scene.get_node_or_null("Managers/StageManager")
+	
+	if stage == null or stage.get_child_count() == 0:
+		return null
+	
+	return stage.get_child(0)
+
+
+## Берём объект, у которого есть настоящий дроп: ломать надо то, что даёт лут.
+func _find_hittable() -> Node2D:
+	var level := _level_root()
+	
+	if level == null:
+		return null
+	
+	var env := level.get_node_or_null("env")
+	
+	if env == null:
+		return null
+	
+	var fallback: Node2D = null
+	
+	for child in env.get_children():
+		if not (child is HittableObjectTemplate):
+			continue
+		if fallback == null:
+			fallback = child
+		if ItemConfig.get_pickuppable_item(child.attributes.drop_item_key) != null:
+			return child
+	
+	return fallback
+
+
+func _find_shared_item() -> Node:
+	var level := _level_root()
+	
+	if level == null:
+		return null
+	
+	var items := level.get_node_or_null("Items")
+	
+	if items == null:
+		return null
+	
+	for child in items.get_children():
+		if child.get_node_or_null("Pickuppable") is PickuppableItem:
+			return child
+	
+	return null
+
+
 # Сигналы
 
 func _on_connection_succeeded() -> void:
-	if _args.has("expect-game"):
+	if _args.has("expect-game") or _args.has("bot"):
 		print("SMOKE CLIENT CONNECTED")
 		return
 	
@@ -254,7 +647,9 @@ func _on_join_rejected(_reason: String) -> void:
 
 
 func _on_failed(_reason: String) -> void:
-	_finish(1, "SMOKE FAIL: %s" % _reason)
+	# даём кадру перейти в меню, если хост ушёл во время игры
+	_fail_reason = _reason
+	_fail_at = _elapsed + 0.6
 
 
 func _on_participant_joined(_peer_id: int) -> void:

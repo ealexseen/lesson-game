@@ -83,14 +83,14 @@ func _on_sent_inventory(player: Player) -> void:
 	EventSystem.INV_inventory_updated.emit(owner_player, inventory)
 
 
-func _on_try_to_pickup_item(player: Player, item_key: ItemConfig.Keys, callback: Callable) -> void:
+## Подбор решает сервер: предмет достанется первому, остальным придёт отмена.
+func _on_try_to_pickup_item(player: Player, item_key: ItemConfig.Keys, item: Node) -> void:
 	if player != owner_player:
 		return
 	
 	if not get_free_slots(): return
 	
-	add_item(item_key)
-	callback.call()
+	WorldSync.request_pickup(item, player, item_key)
 
 
 func _on_add_item(player: Player, item_key: ItemConfig.Keys) -> void:
