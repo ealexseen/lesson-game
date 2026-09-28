@@ -3,3 +3,6 @@
 /android/
 .idea
 /build
+
+# пользовательская папка Godot при прогонах под песочницей (см. AGENTS.md)
+.dsh_user/

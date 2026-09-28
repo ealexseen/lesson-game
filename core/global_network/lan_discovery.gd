@@ -5,6 +5,8 @@ class_name LanDiscovery extends Node
 ##
 ## Порт обнаружения отдельный от игрового (NetworkManager.DEFAULT_PORT = 8910),
 ## иначе слушатель и ENet-сервер конфликтовали бы на одной машине.
+## Слушатель на машине может быть только один, поэтому занятый порт — не приговор:
+## пока лобби открыто, попытки занять порт повторяются.
 
 signal servers_changed(_servers: Dictionary)
 
@@ -12,9 +14,12 @@ const DISCOVERY_PORT := 8911
 const BROADCAST_ADDRESS := "255.255.255.255"
 const BEACON_INTERVAL := 1.0
 const SERVER_TIMEOUT := 3.5
+const RETRY_INTERVAL := 2.0
 
 var _udp: PacketPeerUDP
 var _broadcasting := false
+var _listen_requested := false
+var _retry_left := 0.0
 var _elapsed := 0.0
 var _server_name := ""
 var _server_port := 0
@@ -43,27 +48,16 @@ func start_broadcasting(_name: String, _port: int, _passworded: bool) -> void:
 
 func start_listening() -> void:
 	stop()
-	
-	_udp = PacketPeerUDP.new()
-	var error := _udp.bind(DISCOVERY_PORT)
-	
-	if error != OK:
-		# на одной машине слушатель может быть только один
-		push_warning("LAN-поиск недоступен: порт %d занят (%d)" % [DISCOVERY_PORT, error])
-		_udp = null
-		return
-	
-	_broadcasting = false
-	set_process(true)
+	_listen_requested = true
+	_try_listen()
 
 
 func stop() -> void:
 	set_process(false)
+	_close_socket()
 	
-	if _udp != null:
-		_udp.close()
-		_udp = null
-	
+	_listen_requested = false
+	_retry_left = 0.0
 	_broadcasting = false
 	_elapsed = 0.0
 	_servers.clear()
@@ -74,12 +68,44 @@ func is_searching() -> bool:
 	return _udp != null and not _broadcasting
 
 
+## Слушать пытаемся, но порт занят другим экземпляром игры — поиск пока недоступен.
+func search_unavailable() -> bool:
+	return _listen_requested and _udp == null
+
+
 func get_servers() -> Dictionary[String, Dictionary]:
 	return _servers.duplicate()
 
 
+func _try_listen() -> void:
+	_close_socket()
+	
+	var udp := PacketPeerUDP.new()
+	var error := udp.bind(DISCOVERY_PORT)
+	
+	if error != OK:
+		udp.close()
+		_retry_left = RETRY_INTERVAL
+		set_process(true)
+		return
+	
+	_udp = udp
+	_broadcasting = false
+	_retry_left = 0.0
+	set_process(true)
+
+
+func _close_socket() -> void:
+	if _udp == null:
+		return
+	
+	_udp.close()
+	_udp = null
+
+
 func _process(_delta: float) -> void:
 	if _udp == null:
+		_retry_if_needed(_delta)
 		return
 	
 	if _broadcasting:
@@ -92,6 +118,17 @@ func _process(_delta: float) -> void:
 		return
 	
 	_receive_beacons(_delta)
+
+
+func _retry_if_needed(_delta: float) -> void:
+	if not _listen_requested:
+		set_process(false)
+		return
+	
+	_retry_left -= _delta
+	
+	if _retry_left <= 0.0:
+		_try_listen()
 
 
 func _send_beacon() -> void:

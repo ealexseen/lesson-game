@@ -139,3 +139,13 @@ func get_participants() -> Dictionary[int, String]:
 
 func participant_name(_peer_id: int) -> String:
 	return participants.get(_peer_id, "?")
+
+
+## Цвет игрока выводится из peer_id: он одинаков на всех пирах и не требует синхронизации.
+func participant_color(_peer_id: int) -> Color:
+	const GOLDEN_RATIO := 0.618033988749895
+	const SATURATION := 0.75
+	const VALUE := 1.0
+	
+	var hue := fmod(absf(float(_peer_id)) * GOLDEN_RATIO, 1.0)
+	return Color.from_hsv(hue, SATURATION, VALUE)

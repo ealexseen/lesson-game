@@ -9,8 +9,13 @@ class_name Player
 @export var walking_energy_change_per_1m := -0.005 # walking - потребление
 @export var spawn: Marker2D
 
+const REMOTE_SMOOTH_SPEED := 15.0 # плавность чужого игрока
+const REMOTE_TELEPORT_DISTANCE := 300.0 # скачок сетевой цели — это телепорт
+
 @onready var equippable_item_holder: EquippableItemHolder = %EquippableItemHolder
 @onready var camera: Camera2D = $Camera2D
+@onready var net_target: Node2D = $NetTarget
+@onready var nameplate: Label = $Nameplate
 
 var peer_id: int = MatchState.OFFLINE_PEER_ID
 var save_equippable_item_holder_position = Vector2.ZERO
@@ -23,7 +28,8 @@ var gravity: float = ProjectSettings.get_setting('physics/2d/default_gravity')
 
 
 func _enter_tree() -> void:
-	MatchState.register_player(self)
+	# peer_id выставляет спавнер до добавления в дерево
+	MatchState.register_player(self, peer_id)
 	EventSystem.PLA_freeze_player.connect(_on_freeze_player)
 	EventSystem.PLA_unfreeze_player.connect(_on_unfreeze_player)
 
@@ -35,11 +41,39 @@ func _exit_tree() -> void:
 func _ready() -> void:
 	save_equippable_item_holder_position = equippable_item_holder.position
 	camera.enabled = is_local()
+	# цель стартует на месте появления, иначе чужой игрок поедет к нулю
+	net_target.position = position
+	_setup_nameplate()
+
+
+## Ник и цвет показываем только у чужих игроков: своя табличка перед глазами мешает.
+func _setup_nameplate() -> void:
+	if is_local() or not MatchState.participants.has(peer_id):
+		nameplate.visible = false
+		return
+	
+	nameplate.text = MatchState.participant_name(peer_id)
+	nameplate.add_theme_color_override("font_color", MatchState.participant_color(peer_id))
+	nameplate.visible = true
 
 
 ## Локальный игрок — тот, чьим вводом управляет этот клиент.
 func is_local() -> bool:
 	return MatchState.local_player == self
+
+
+func _process(_delta: float) -> void:
+	if is_local():
+		return
+	
+	# чужой игрок плавно едет за сетевой целью: своей физикой он не управляет
+	if position.distance_to(net_target.position) > REMOTE_TELEPORT_DISTANCE:
+		position = net_target.position
+	else:
+		position = position.lerp(
+			net_target.position,
+			clampf(_delta * REMOTE_SMOOTH_SPEED, 0.0, 1.0)
+		)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -62,6 +96,9 @@ func _physics_process(_delta: float) -> void:
 	check_walking_energy_change(_delta)
 	save_player()
 	
+	# это значение уходит по сети остальным
+	net_target.position = position
+	
 	if Input.is_action_pressed("use_item"):
 		equippable_item_holder.try_to_use_item()
 
@@ -77,7 +114,7 @@ func check_walking_energy_change(_delta: float) -> void:
 
 
 func save_player() -> void:
-	if position.y >= 2500:
+	if position.y >= 2500 and spawn:
 		position = spawn.position
 
 

@@ -1,7 +1,5 @@
-[gd_scene load_steps=16 format=3 uid="uid://dism1ib5lncje"]
+[gd_scene load_steps=14 format=3 uid="uid://dism1ib5lncje"]
 
-[ext_resource type="PackedScene" uid="uid://bgllyr4dxpr28" path="res://shared/actors/player/player.tscn" id="2_isi4y"]
-[ext_resource type="PackedScene" uid="uid://c4x0b611n6lxw" path="res://shared/objects/bullet/bullet.tscn" id="3_iat4p"]
 [ext_resource type="PackedScene" uid="uid://7ja651083dmm" path="res://shared/objects/ground/ground.tscn" id="4_bpow0"]
 [ext_resource type="PackedScene" uid="uid://brvkfjqyhgl8h" path="res://shared/objects/door/door.tscn" id="5_534y3"]
 [ext_resource type="PackedScene" uid="uid://bqgtvj87gapuj" path="res://shared/objects/items/components/items/coin_item/coin_item.tscn" id="5_q3sjy"]
@@ -17,11 +15,6 @@
 [ext_resource type="PackedScene" uid="uid://bsbbyvuwvbotv" path="res://shared/actors/animals/cat/cat.tscn" id="15_gv5xj"]
 
 [node name="StageController" type="Node"]
-
-[node name="Player" parent="." node_paths=PackedStringArray("spawn") instance=ExtResource("2_isi4y")]
-position = Vector2(10220, 218)
-bullet_schene = ExtResource("3_iat4p")
-spawn = NodePath("../SpawnPlayer")
 
 [node name="Grounds1" type="Node" parent="."]
 
@@ -325,5 +318,5 @@ position = Vector2(7931, 252)
 [node name="Cat7" parent="." instance=ExtResource("15_gv5xj")]
 position = Vector2(9409, 254)
 
-[node name="SpawnPlayer" type="Marker2D" parent="."]
+[node name="SpawnPlayer" type="Marker2D" parent="." groups=["player_spawn"]]
 position = Vector2(-96, -1113)

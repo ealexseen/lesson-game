@@ -1,17 +1,23 @@
 class_name NavigationMultiplayer extends NavigationBase
 
 ## Лобби: создать игру или подключиться к ней.
-## Игроки появляются в мире на следующем этапе (M2), пока лобби показывает только состав.
+## Состав игроков показывает общий узел PlayerRoster, тут только сеть и статус.
 
 const DEFAULT_ADDRESS := "127.0.0.1"
+const LAN_TITLE_DEFAULT := "Найденные игры в локальной сети:"
+const LAN_TITLE_HOSTING := "Найденные игры: вы хост, игра видна другим"
+const LAN_TITLE_UNAVAILABLE := "Найденные игры: поиск недоступен, введите адрес вручную"
+
+var _hint_elapsed := 0.0
 
 @onready var name_input: LineEdit = $PanelContainer/VBoxContainer/NameRow/NameInput
 @onready var address_input: LineEdit = $PanelContainer/VBoxContainer/AddressRow/AddressInput
 @onready var password_input: LineEdit = $PanelContainer/VBoxContainer/PasswordRow/PasswordInput
 @onready var host_button: ButtonBase = $PanelContainer/VBoxContainer/ButtonsRow/HostButton
 @onready var join_button: ButtonBase = $PanelContainer/VBoxContainer/ButtonsRow/JoinButton
+@onready var start_button: ButtonBase = $PanelContainer/VBoxContainer/ButtonsRow/StartButton
 @onready var status_label: Label = $PanelContainer/VBoxContainer/StatusLabel
-@onready var players_list: ItemList = $PanelContainer/VBoxContainer/PlayersList
+@onready var lan_title: Label = $PanelContainer/VBoxContainer/LanTitle
 @onready var lan_list: ItemList = $PanelContainer/VBoxContainer/LanList
 @onready var back_button: ButtonBase = $PanelContainer/VBoxContainer/BackButton
 
@@ -23,6 +29,7 @@ func _ready() -> void:
 	
 	host_button.pressed.connect(_on_host_pressed)
 	join_button.pressed.connect(_on_join_pressed)
+	start_button.pressed.connect(_on_start_pressed)
 	back_button.pressed.connect(_on_back_pressed)
 	lan_list.item_activated.connect(_on_lan_host_activated)
 	
@@ -33,12 +40,31 @@ func _ready() -> void:
 	NetworkManager.server_disconnected.connect(_on_server_disconnected)
 	NetworkManager.join_rejected.connect(_on_join_rejected)
 	NetworkManager.lan.servers_changed.connect(_refresh_servers)
-	MatchState.participants_changed.connect(_refresh_players)
 	
 	NetworkManager.start_lan_search()
 	_refresh_buttons()
-	_refresh_players()
 	_refresh_servers(NetworkManager.lan.get_servers())
+	_refresh_lan_hint()
+
+
+func _process(_delta: float) -> void:
+	# подсказка про поиск в сети может измениться (порт освободился или занят)
+	_hint_elapsed += _delta
+	
+	if _hint_elapsed < 1.0:
+		return
+	
+	_hint_elapsed = 0.0
+	_refresh_lan_hint()
+
+
+func _refresh_lan_hint() -> void:
+	if NetworkManager.is_hosting():
+		lan_title.text = LAN_TITLE_HOSTING
+	elif NetworkManager.lan.search_unavailable():
+		lan_title.text = LAN_TITLE_UNAVAILABLE
+	else:
+		lan_title.text = LAN_TITLE_DEFAULT
 
 
 func _exit_tree() -> void:
@@ -80,6 +106,10 @@ func _on_back_pressed() -> void:
 	_leave_lobby()
 
 
+func _on_start_pressed() -> void:
+	NetworkManager.start_game()
+
+
 func _on_lan_host_activated(_index: int) -> void:
 	var address = lan_list.get_item_metadata(_index)
 	
@@ -109,20 +139,10 @@ func _refresh_buttons() -> void:
 	
 	host_button.disabled = connected
 	join_button.disabled = connected
+	start_button.visible = NetworkManager.is_hosting()
 	name_input.editable = not connected
 	address_input.editable = not connected
 	password_input.editable = not connected
-
-
-func _refresh_players() -> void:
-	players_list.clear()
-	
-	var ids := MatchState.participants.keys()
-	ids.sort()
-	
-	for peer_id in ids:
-		var host_mark := " (хост)" if peer_id == 1 else ""
-		players_list.add_item("%s%s" % [MatchState.participants[peer_id], host_mark])
 
 
 func _refresh_servers(_servers: Dictionary) -> void:

@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="PackedScene" uid="uid://3v4v1b13efak" path="res://shared/gui/components/navigations/navigation_base/navigation_base.tscn" id="1_base"]
 [ext_resource type="Script" path="res://shared/gui/components/navigations/navigation_multiplayer/navigation_multiplayer.gd" id="2_lobby"]
 [ext_resource type="PackedScene" uid="uid://blc6467djowee" path="res://shared/gui/components/buttons/button_base/button_base.tscn" id="3_button"]
 [ext_resource type="FontFile" uid="uid://kwmqiai2u63n" path="res://shared/assets/font/Raleway/static/Raleway-MediumItalic.ttf" id="4_font"]
+[ext_resource type="Script" path="res://shared/gui/components/player_roster/player_roster.gd" id="5_roster"]
 
 [node name="NavigationMultiplayer" instance=ExtResource("1_base")]
 script = ExtResource("2_lobby")
@@ -77,6 +78,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Присоединиться"
 
+[node name="StartButton" parent="PanelContainer/VBoxContainer/ButtonsRow" index="2" instance=ExtResource("3_button")]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Начать игру"
+
 [node name="StatusLabel" type="Label" parent="PanelContainer/VBoxContainer" index="5"]
 layout_mode = 2
 text = ""
@@ -92,6 +99,7 @@ custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("4_font")
+script = ExtResource("5_roster")
 
 [node name="LanTitle" type="Label" parent="PanelContainer/VBoxContainer" index="8"]
 layout_mode = 2

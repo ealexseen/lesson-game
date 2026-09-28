@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://bgllyr4dxpr28"]
+[gd_scene load_steps=10 format=3 uid="uid://bgllyr4dxpr28"]
 
 [ext_resource type="Texture2D" uid="uid://osa1wgyqn5ax" path="res://shared/assets/images/icon.svg" id="1_oul6g"]
 [ext_resource type="Script" uid="uid://bqrrx5yf5tnkq" path="res://shared/actors/player/player.gd" id="1_rkbax"]
@@ -8,6 +8,11 @@
 [ext_resource type="PackedScene" uid="uid://bb6yyqqcchsnt" path="res://shared/gui/components/hot_bar/managers/equipped_item_manager/equipped_item_manager.tscn" id="5_gnkmh"]
 [ext_resource type="PackedScene" uid="uid://cyhy8e7ejrbbb" path="res://shared/actors/player/managers/player_stats_manager/player_stats_manager.tscn" id="7_8bsna"]
 [ext_resource type="Script" path="res://shared/actors/player/camera/smooth_camera.gd" id="8_smoothcam"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_player"]
+properties/0/path = NodePath(":position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
 
 [node name="Player" type="CharacterBody2D" unique_id=1996297568]
 process_mode = 1
@@ -52,3 +57,21 @@ player = NodePath("../..")
 [node name="EquippedItemManager" parent="Managers" unique_id=396259627 instance=ExtResource("5_gnkmh")]
 
 [node name="PlayerStatsManager" parent="Managers" unique_id=919647898 instance=ExtResource("7_8bsna")]
+
+[node name="NetTarget" type="Node2D" parent="."]
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="NetTarget"]
+replication_interval = 0.05
+root_path = NodePath("..")
+replication_config = SubResource("SceneReplicationConfig_player")
+
+[node name="Nameplate" type="Label" parent="."]
+offset_left = -120.0
+offset_top = -125.0
+offset_right = 120.0
+offset_bottom = -90.0
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 6
+text = ""

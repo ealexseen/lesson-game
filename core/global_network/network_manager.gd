@@ -18,6 +18,7 @@ signal join_rejected(_reason: String)
 enum Mode { OFFLINE, HOST, CLIENT }
 
 const DEFAULT_PORT := 8910
+const GAME_SCENE_PATH := "res://core/scenes/map_1/map_1.tscn"
 const HANDSHAKE_TIMEOUT := 5.0
 const DEFAULT_NAME := "Игрок"
 # пауза перед отключением отклонённого клиента, чтобы причина успела дойти
@@ -35,6 +36,7 @@ var _pending_password: String = ""
 var _pending_address: String = ""
 var _accepted: bool = false
 var _rejected: bool = false
+var _game_started: bool = false
 var _handshake_left: float = 0.0
 
 
@@ -42,6 +44,9 @@ func _ready() -> void:
 	lan = LanDiscovery.new()
 	lan.name = "LanDiscovery"
 	add_child(lan)
+	
+	# клиенты не соединяются напрямую, весь трафик идёт через хост
+	multiplayer.server_relay = true
 	
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
@@ -56,6 +61,28 @@ func is_connected_to_game() -> bool:
 
 func is_hosting() -> bool:
 	return mode == Mode.HOST
+
+
+## Пинг до пира в миллисекундах или -1, если измерить нельзя.
+## При релее через сервер клиент видит напрямую только хост, остальные — «—».
+func peer_ping(_peer_id: int) -> int:
+	if mode == Mode.OFFLINE:
+		return -1
+	
+	if _peer_id == multiplayer.get_unique_id():
+		return -1
+	
+	var peer := multiplayer.multiplayer_peer
+	
+	if not (peer is ENetMultiplayerPeer):
+		return -1
+	
+	var packet_peer := (peer as ENetMultiplayerPeer).get_peer(_peer_id)
+	
+	if packet_peer == null:
+		return -1
+	
+	return int(packet_peer.get_statistic(ENetPacketPeer.PEER_ROUND_TRIP_TIME))
 
 
 ## Создать игру. Возвращает текст ошибки или пустую строку.
@@ -144,6 +171,7 @@ func _close_peer() -> void:
 	_handshake_left = 0.0
 	_accepted = false
 	_rejected = false
+	_game_started = false
 	lan.stop()
 	
 	if multiplayer.multiplayer_peer != null:
@@ -201,7 +229,11 @@ func _on_connected_to_server() -> void:
 func _on_connection_failed() -> void:
 	var address := _pending_address
 	disconnect_game()
-	connection_failed.emit("Не удалось подключиться к %s:%d" % [address, DEFAULT_PORT])
+	connection_failed.emit(
+		"Не удалось подключиться к %s:%d — хост недоступен или нет свободных мест" % [
+			address, DEFAULT_PORT
+		]
+	)
 
 
 func _on_server_disconnected() -> void:
@@ -238,6 +270,11 @@ func _submit_join(_client_name: String, _client_password: String) -> void:
 	
 	MatchState.add_participant(sender, _clean_name(_client_name))
 	_sync_participants()
+	
+	# игрок подключился к идущей игре — сразу отправляем его на карту
+	if _game_started:
+		rpc_id(sender, "_load_game_scene")
+	
 	participant_joined.emit(sender)
 
 
@@ -281,3 +318,20 @@ func _receive_participants(_list: Dictionary) -> void:
 		_accepted = true
 		_handshake_left = 0.0
 		connection_succeeded.emit()
+
+
+# Начало игры
+
+## Хост начинает игру: все пиры синхронно переходят на карту.
+func start_game() -> void:
+	if mode != Mode.HOST:
+		return
+	
+	_game_started = true
+	rpc("_load_game_scene")
+	_load_game_scene()
+
+
+@rpc("authority", "call_remote", "reliable")
+func _load_game_scene() -> void:
+	get_tree().change_scene_to_file(GAME_SCENE_PATH)
