@@ -1,0 +1,109 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" uid="uid://3v4v1b13efak" path="res://shared/gui/components/navigations/navigation_base/navigation_base.tscn" id="1_base"]
+[ext_resource type="Script" path="res://shared/gui/components/navigations/navigation_multiplayer/navigation_multiplayer.gd" id="2_lobby"]
+[ext_resource type="PackedScene" uid="uid://blc6467djowee" path="res://shared/gui/components/buttons/button_base/button_base.tscn" id="3_button"]
+[ext_resource type="FontFile" uid="uid://kwmqiai2u63n" path="res://shared/assets/font/Raleway/static/Raleway-MediumItalic.ttf" id="4_font"]
+
+[node name="NavigationMultiplayer" instance=ExtResource("1_base")]
+script = ExtResource("2_lobby")
+
+[node name="PanelContainer" parent="." index="0"]
+offset_left = -270.0
+offset_top = -265.0
+offset_right = 270.0
+offset_bottom = 265.0
+
+[node name="Title" parent="PanelContainer/VBoxContainer" index="0"]
+text = "Мультиплеер"
+
+[node name="NameRow" type="HBoxContainer" parent="PanelContainer/VBoxContainer" index="1"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="PanelContainer/VBoxContainer/NameRow"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "Имя"
+
+[node name="NameInput" type="LineEdit" parent="PanelContainer/VBoxContainer/NameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("4_font")
+placeholder_text = "ваше имя"
+
+[node name="AddressRow" type="HBoxContainer" parent="PanelContainer/VBoxContainer" index="2"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AddressLabel" type="Label" parent="PanelContainer/VBoxContainer/AddressRow"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "Адрес"
+
+[node name="AddressInput" type="LineEdit" parent="PanelContainer/VBoxContainer/AddressRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("4_font")
+placeholder_text = "127.0.0.1"
+
+[node name="PasswordRow" type="HBoxContainer" parent="PanelContainer/VBoxContainer" index="3"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PasswordLabel" type="Label" parent="PanelContainer/VBoxContainer/PasswordRow"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "Пароль"
+
+[node name="PasswordInput" type="LineEdit" parent="PanelContainer/VBoxContainer/PasswordRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("4_font")
+placeholder_text = "можно оставить пустым"
+secret = true
+
+[node name="ButtonsRow" type="HBoxContainer" parent="PanelContainer/VBoxContainer" index="4"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HostButton" parent="PanelContainer/VBoxContainer/ButtonsRow" index="0" instance=ExtResource("3_button")]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Создать игру"
+
+[node name="JoinButton" parent="PanelContainer/VBoxContainer/ButtonsRow" index="1" instance=ExtResource("3_button")]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Присоединиться"
+
+[node name="StatusLabel" type="Label" parent="PanelContainer/VBoxContainer" index="5"]
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="PlayersTitle" type="Label" parent="PanelContainer/VBoxContainer" index="6"]
+layout_mode = 2
+text = "Игроки:"
+
+[node name="PlayersList" type="ItemList" parent="PanelContainer/VBoxContainer" index="7"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("4_font")
+
+[node name="LanTitle" type="Label" parent="PanelContainer/VBoxContainer" index="8"]
+layout_mode = 2
+text = "Найденные игры в локальной сети:"
+
+[node name="LanList" type="ItemList" parent="PanelContainer/VBoxContainer" index="9"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("4_font")
+allow_reselect = true
+
+[node name="BackButton" parent="PanelContainer/VBoxContainer" index="10" instance=ExtResource("3_button")]
+layout_mode = 2
+text = "Назад"

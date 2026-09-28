@@ -10,7 +10,9 @@ class_name Player
 @export var spawn: Marker2D
 
 @onready var equippable_item_holder: EquippableItemHolder = %EquippableItemHolder
+@onready var camera: Camera2D = $Camera2D
 
+var peer_id: int = MatchState.OFFLINE_PEER_ID
 var save_equippable_item_holder_position = Vector2.ZERO
 
 var abilities: Dictionary = {}
@@ -21,24 +23,41 @@ var gravity: float = ProjectSettings.get_setting('physics/2d/default_gravity')
 
 
 func _enter_tree() -> void:
-	EventSystem.PLA_freeze_player.connect(set_freeze.bind(true))
-	EventSystem.PLA_unfreeze_player.connect(set_freeze.bind(false))
+	MatchState.register_player(self)
+	EventSystem.PLA_freeze_player.connect(_on_freeze_player)
+	EventSystem.PLA_unfreeze_player.connect(_on_unfreeze_player)
+
+
+func _exit_tree() -> void:
+	MatchState.unregister_player(self)
 
 
 func _ready() -> void:
 	save_equippable_item_holder_position = equippable_item_holder.position
+	camera.enabled = is_local()
+
+
+## Локальный игрок — тот, чьим вводом управляет этот клиент.
+func is_local() -> bool:
+	return MatchState.local_player == self
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
+	if not is_local():
+		return
+	
 	if event.is_action_pressed("open_crafting_menu"):
 		EventSystem.UI_create.emit(UIConfig.Keys.CraftingMenu)
 	elif event.is_action_pressed("esc"):	
 		EventSystem.UI_create.emit(UIConfig.Keys.MenuGame)
 	elif event.is_action_pressed("input_hot_key"):
-		EventSystem.EQU_hotkey_pressed.emit(int(event.as_text()))
+		EventSystem.EQU_hotkey_pressed.emit(self, int(event.as_text()))
 
 
 func _physics_process(_delta: float) -> void:
+	if not is_local():
+		return
+	
 	move(_delta)
 	check_walking_energy_change(_delta)
 	save_player()
@@ -50,6 +69,7 @@ func _physics_process(_delta: float) -> void:
 func check_walking_energy_change(_delta: float) -> void:
 	if velocity.x:
 		EventSystem.PLA_change_energy.emit(
+			self,
 			_delta *
 			walking_energy_change_per_1m *
 			Vector2(velocity.x, 0).length()
@@ -99,6 +119,20 @@ func shoot() -> void:
 	await get_tree().create_timer(0.3).timeout
 	
 	can_shoot = true
+
+
+func _on_freeze_player(_player: Player) -> void:
+	if _player != self:
+		return
+	
+	set_freeze(true)
+
+
+func _on_unfreeze_player(_player: Player) -> void:
+	if _player != self:
+		return
+	
+	set_freeze(false)
 
 
 func set_freeze(_value: bool) -> void:

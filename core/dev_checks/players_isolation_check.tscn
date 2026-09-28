@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/dev_checks/players_isolation_check.gd" id="1_check"]
+
+[node name="PlayersIsolationCheck" type="Node"]
+script = ExtResource("1_check")

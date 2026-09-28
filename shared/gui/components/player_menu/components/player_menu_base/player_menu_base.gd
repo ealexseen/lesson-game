@@ -14,7 +14,7 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	
-	EventSystem.INV_ask_update_inventory.emit()
+	EventSystem.INV_ask_update_inventory.emit(MatchState.local_player)
 	close_button.pressed.connect(close)
 	
 	for slot in inventory_container.get_children():
@@ -45,7 +45,10 @@ func close() -> void:
 	EventSystem.UI_destroy.emit(UIConfig.Keys.CraftingMenu)
 
 
-func updated_inventory(inventory: Array) -> void:
+func updated_inventory(player: Player, inventory: Array) -> void:
+	if not MatchState.is_local_event(player):
+		return
+	
 	for slot in inventory_container.get_children():
 		if slot is InventorySlot:
 			slot._set_item_key(inventory[slot.get_index()])

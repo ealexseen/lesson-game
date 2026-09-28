@@ -1,10 +1,13 @@
 class_name EquippableItemHolder extends Node2D
 
 
+var owner_player: Player
 var current_item
 var save_position
 
 func _enter_tree() -> void:
+	owner_player = MatchState.find_owner_player(self)
+	
 	EventSystem.EQU_equip_item.connect(on_equip_item)
 	EventSystem.EQU_unequip_item.connect(on_unequip_item)
 
@@ -20,8 +23,11 @@ func try_to_use_item() -> void:
 	current_item.try_to_use()
 
 
-func on_equip_item(item_key) -> void:
-	on_unequip_item()
+func on_equip_item(player: Player, item_key) -> void:
+	if player != owner_player:
+		return
+	
+	on_unequip_item(player)
 	
 	if not item_key:
 		return
@@ -45,7 +51,10 @@ func on_equip_item(item_key) -> void:
 	add_child(current_item)
 
 
-func on_unequip_item() -> void:
+func on_unequip_item(player: Player) -> void:
+	if player != owner_player:
+		return
+	
 	if not current_item:
 		return
 	

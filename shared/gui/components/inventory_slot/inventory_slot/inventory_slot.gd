@@ -46,6 +46,7 @@ func _drop_data(_at_position: Vector2, origin_slot: Variant) -> void:
 		var to_is_hot_bar = self is HotbarSlot
 		
 		EventSystem.INV_switch_two_item_indexes.emit(
+			MatchState.local_player,
 			from_index,
 			from_is_hot_bar,
 			to_index, 

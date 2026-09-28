@@ -24,6 +24,8 @@ config/icon="uid://6wdwn3iq680"
 
 EventSystem="*res://core/global_events/event_system.gd"
 GlobalSettings="*res://core/global_settings/settings.gd"
+MatchState="*res://core/global_match/match_state.gd"
+NetworkManager="*res://core/global_network/network_manager.gd"
 
 [debug]
 

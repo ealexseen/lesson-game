@@ -45,7 +45,7 @@ func _on_create_ui(key: UIConfig.Keys) -> void:
 	if items.has(key): return
 	if items.size(): return
 	
-	EventSystem.PLA_freeze_player.emit()
+	EventSystem.PLA_freeze_player.emit(MatchState.local_player)
 	
 	add_ui(key)
 	
@@ -60,6 +60,6 @@ func _on_destroy_ui(key: BulletinConfig.Keys) -> void:
 	last_item = key
 	
 	if not items.size():
-		EventSystem.PLA_unfreeze_player.emit()
+		EventSystem.PLA_unfreeze_player.emit(MatchState.local_player)
 	
 	EventSystem.UI_check_count.emit(items.size())

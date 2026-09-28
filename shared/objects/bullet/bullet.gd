@@ -4,7 +4,9 @@ class_name Bullet
 @export var size = 2
 @export var speed = 800
 @export_enum('parent', 'child', 'child_level_2') var type = 'parent'
-@onready var bullet: PackedScene = preload("res://shared/objects/bullet/bullet.tscn")
+# Путь вместо preload: сцена пули ссылается на этот же скрипт, и preload создаёт
+# цикл «скрипт ↔ сцена», из-за которого ресурсы не освобождаются при выходе.
+const BULLET_SCENE_PATH := "res://shared/objects/bullet/bullet.tscn"
 
 var first = true
 var countMax = 2
@@ -31,7 +33,8 @@ func _physics_process(_delta: float) -> void:
 
 
 func _bam(_size: float, vector: Vector2, _type: String) -> void:
-	var _bullet: Bullet = bullet.instantiate()
+	var bullet_scene: PackedScene = load(BULLET_SCENE_PATH)
+	var _bullet: Bullet = bullet_scene.instantiate()
 	
 	_bullet.size = _size
 	_bullet.type = _type

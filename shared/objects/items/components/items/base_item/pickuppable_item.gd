@@ -14,7 +14,7 @@ func _ready() -> void:
 
 
 func start_interaction() -> void:
-	EventSystem.INV_try_to_pickup_item.emit(item_key, destroy_self)
+	EventSystem.INV_try_to_pickup_item.emit(MatchState.local_player, item_key, destroy_self)
 
 
 func _input(event: InputEvent) -> void:
@@ -44,10 +44,12 @@ func set_pickup_active(value: bool) -> void:
 
 
 func on_body_entered(_body: Node2D) -> void:
-	if _body is not Player: return
+	if _body != MatchState.local_player: return
 	
 	set_pickup_active(true)
 
 
 func on_body_exited(_body: Node2D) -> void:
+	if _body != MatchState.local_player: return
+	
 	set_pickup_active(false)

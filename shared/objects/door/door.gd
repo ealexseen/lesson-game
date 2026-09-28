@@ -65,14 +65,17 @@ func _open_door(value: bool) -> void:
 
 
 func _on_body_entered(_body: Node2D) -> void:
-	if _body is Player:
-		player = _body
-		_is_visit = true
-		
-		_init_prompt()
+	if _body != MatchState.local_player: return
+	
+	player = _body
+	_is_visit = true
+	
+	_init_prompt()
 
 
 func _on_body_exited(_body: Node2D) -> void:
+	if _body != MatchState.local_player: return
+	
 	_is_visit = false
 	player = null
 	

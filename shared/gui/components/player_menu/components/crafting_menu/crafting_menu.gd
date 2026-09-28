@@ -38,13 +38,13 @@ func on_hide_item_info() -> void:
 func on_button_pressed(item_key: ItemConfig.Keys) -> void:
 	var blueprint = BlueprintConfig.get_crafring_blueprint_resource(item_key)
 	
-	EventSystem.INV_remove_items.emit(blueprint.get_all_keys())
-	EventSystem.INV_add_item.emit(item_key)
+	EventSystem.INV_remove_items.emit(MatchState.local_player, blueprint.get_all_keys())
+	EventSystem.INV_add_item.emit(MatchState.local_player, item_key)
 	
 
 
-func updated_inventory(inventory: Array) -> void:
-	super(inventory)
+func updated_inventory(player: Player, inventory: Array) -> void:
+	super(player, inventory)
 	
 	for crafting_slot in crafting_button_container.get_children():
 		var slot: CraftingSlot = crafting_slot
