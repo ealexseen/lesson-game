@@ -34,6 +34,11 @@ const REPORT_DIR := "res://_dsh_reports/"
 # тайминги мира: считаются от момента, когда карта загрузилась
 const BREAK_DELAY := 6.0
 const PICKUP_DELAY := 9.0
+const EQUIP_DELAY := 3.0
+const EQUIP_FALLBACK_DELAY := 5.0
+const EQUIP_WALK_TIME := 1.5
+const USE_DELAY := 8.0
+const USE_STOP_DELAY := 25.0
 const PICKUP_CHECK_DELAY := 1.5
 const HITS_TO_BREAK := 40
 const RAY_HALF := 40.0
@@ -62,6 +67,13 @@ var _bot_phase := -1
 var _net_cached := ""
 var _fail_reason := ""
 var _fail_at := 0.0
+var _host_equipped := false
+var _host_equip_fallback := false
+var _host_walk_released := false
+var _equip_checked := false
+var _host_used := false
+var _host_use_released := false
+var _use_checked := false
 
 
 func _ready() -> void:
@@ -301,6 +313,8 @@ func _tick_host() -> void:
 
 
 func _tick_host_world() -> void:
+	_tick_host_equip()
+	
 	if not _tree_gone and _tree_path != "" and get_node_or_null(_tree_path) == null:
 		_tree_gone = true # queue_free срабатывает в конце кадра
 	
@@ -319,6 +333,83 @@ func _tick_host_world() -> void:
 	
 	print("SMOKE HOST SUMMARY: tree_gone=%s loot=%d" % [_tree_gone, _loot_count()])
 	_finish(0, "SMOKE HOST DONE")
+
+
+## Хост берёт оружие и разворачивается вправо: клиент должен увидеть и то, и другое.
+func _tick_host_equip() -> void:
+	var player := MatchState.local_player
+	
+	if player == null:
+		return
+	
+	if not _host_equipped and _world_elapsed() >= EQUIP_DELAY:
+		_host_equipped = true
+		Input.action_press("right")
+		EventSystem.EQU_hotkey_pressed.emit(player, 1)
+		print("SMOKE HOST EQUIPS: слот 1")
+	
+	# если хотбар пуст, экипируем тем же сигналом, каким это делает хотбар
+	if _host_equipped and not _host_equip_fallback and _world_elapsed() >= EQUIP_FALLBACK_DELAY:
+		_host_equip_fallback = true
+		
+		if player.equippable_item_holder.current_item == null:
+			EventSystem.EQU_equip_item.emit(player, ItemConfig.Keys.Axe)
+			print("SMOKE HOST EQUIPS: напрямую (хотбар пуст)")
+	
+	if _host_equipped and not _host_walk_released and _world_elapsed() >= EQUIP_DELAY + EQUIP_WALK_TIME:
+		_host_walk_released = true
+		Input.action_release("right")
+	
+	# машем предметом долго: так его застанет и тот, кто подключится позже
+	if _host_equipped and not _host_used and _world_elapsed() >= USE_DELAY:
+		_host_used = true
+		Input.action_press("use_item")
+		print("SMOKE HOST USES: предмет")
+	
+	if _host_used and not _host_use_released and _world_elapsed() >= USE_STOP_DELAY:
+		_host_use_released = true
+		Input.action_release("use_item")
+
+
+## Клиент проверяет, что видит чужую анимацию использования.
+func _check_remote_use() -> void:
+	if _use_checked:
+		return
+	
+	var host_player: Player = MatchState.players.get(1)
+	
+	if host_player == null or host_player.equippable_item_holder == null:
+		return
+	
+	var item = host_player.equippable_item_holder.current_item
+	
+	if item == null or item.animation_player == null:
+		return
+	if not item.animation_player.is_playing():
+		return
+	
+	_use_checked = true
+	print("SMOKE USE CLIENT: %s playing=true" % item.name)
+
+
+## Клиент проверяет, что видит чужое оружие и правильную сторону.
+func _check_remote_equip() -> void:
+	if _equip_checked:
+		return
+	
+	var host_player: Player = MatchState.players.get(1)
+	
+	if host_player == null or host_player.equippable_item_holder == null:
+		return
+	if host_player.equippable_item_holder.current_item == null:
+		return
+	
+	_equip_checked = true
+	print("SMOKE EQUIP CLIENT: %s face_right=%s own_empty=%s" % [
+		host_player.equippable_item_holder.current_item.name,
+		host_player.equippable_item_holder.scale.x > 0,
+		MatchState.local_player.equippable_item_holder.current_item == null,
+	])
 
 
 func _break_tree() -> void:
@@ -391,6 +482,8 @@ func _tick_client_motion() -> void:
 
 func _tick_client_world() -> void:
 	_remember_tree()
+	_check_remote_equip()
+	_check_remote_use()
 	
 	if not _tree_gone and _tree_path != "" and get_node_or_null(_tree_path) == null:
 		_tree_gone = true
@@ -406,13 +499,13 @@ func _tick_client_world() -> void:
 	if _pickup_asked and not _pickup_checked and _world_elapsed() >= PICKUP_DELAY + PICKUP_CHECK_DELAY:
 		_check_pickup("CLIENT")
 	
-	if _tree_gone and _pickup_checked:
+	if _tree_gone and _pickup_checked and _equip_checked and _use_checked:
 		_finish(0, "SMOKE CLIENT WORLD OK")
 		return
 	
 	if _world_elapsed() >= WORLD_WATCH_TIME:
-		_finish(1, "SMOKE CLIENT FAIL: tree_gone=%s pickup=%s" % [
-			_tree_gone, _pickup_checked
+		_finish(1, "SMOKE CLIENT FAIL: tree_gone=%s pickup=%s equip=%s use=%s" % [
+			_tree_gone, _pickup_checked, _equip_checked, _use_checked
 		])
 
 

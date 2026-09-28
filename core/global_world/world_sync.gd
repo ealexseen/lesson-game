@@ -7,6 +7,9 @@ extends Node
 ## получил снапшот и увидел мир таким же, как все.
 ## class_name здесь нельзя: имя занято автолоадом WorldSync.
 
+## Пир вошёл в мир: владельцы досылают ему то, что он пропустил (экипировку).
+signal peer_entered_world(_peer_id: int)
+
 const HITBOX_LAYER_MASK := 64 # слой hitbox (layer_7)
 const MAX_HIT_DISTANCE := 250.0 # насколько далеко от игрока может начаться удар
 const DEBUG_RAY := false # рисовать отладочный луч удара
@@ -230,18 +233,10 @@ func _check_snapshot_request() -> void:
 
 
 ## Сервер отмечает пира как вошедшего в мир и сообщает остальным.
-@rpc("any_peer", "call_remote", "reliable")
-func _peer_in_world() -> void:
-	var sender := multiplayer.get_remote_sender_id()
-	_peers_in_world[sender] = true
-	
-	if is_server():
-		rpc("_peer_in_world_remote", sender)
-
-
 @rpc("authority", "call_remote", "reliable")
 func _peer_in_world_remote(_peer_id: int) -> void:
 	_peers_in_world[_peer_id] = true
+	peer_entered_world.emit(_peer_id)
 
 
 func snapshot() -> Dictionary:
@@ -259,6 +254,7 @@ func _request_snapshot() -> void:
 	
 	var sender := multiplayer.get_remote_sender_id()
 	_peers_in_world[sender] = true
+	peer_entered_world.emit(sender)
 	rpc("_peer_in_world_remote", sender)
 	rpc_id(sender, "_apply_snapshot", snapshot())
 
