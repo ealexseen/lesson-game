@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://cftp53gu2mb6t"]
+
+[ext_resource type="PackedScene" uid="uid://blc6467djowee" path="res://shared/gui/components/buttons/button_base/button_base.tscn" id="1_jp4qk"]
+[ext_resource type="Script" uid="uid://bg0t58v8cmu1l" path="res://shared/gui/components/buttons/button_multiplayer/button_multiplayer.gd" id="2_m7x2n"]
+
+[node name="ButtonMultiplayer" unique_id=139092568 instance=ExtResource("1_jp4qk")]
+text = "Мультиплеер"
+script = ExtResource("2_m7x2n")
