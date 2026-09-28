@@ -29,6 +29,7 @@ C:\Program Files\Godot_v4.6-stable_win64.exe\Godot_v4.6-stable_win64_console.exe
 - `core/` — точки входа и этапы: `scenes/` (`menu`, `map_1`), `stages/` с `configs/`, `levels/`, `managers/stage_manager`.
 - `shared/` — вся игровая логика: `actors/` (player + `camera/`, `ray_cast/`, `managers/`, `equippable_item_holder/`; `animals/`), `objects/` (`abilities/`, `items/`, `blueprints/`, `environment/`, `door/`, `hitbox/`, `bullet/`, `ground/`), `gui/` (`components/`, `managers/`, `configs/`), `assets/`, `theme/`.
 - Именование по роли: `configs/*_config.gd` — конфиги, `resources/*_resource.gd` — данные-ресурсы, `managers/*_manager/*.gd` — менеджеры, `*_base.gd` и `*_template.gd` — базовые классы.
+- [`docs/multiplayer_plan.md`](docs/multiplayer_plan.md) — план мультиплеера (кооп, listen-server, до 20 игроков): согласованные решения, будущие автолоады `NetworkManager`/`MatchState`, этапы M0–M5.
 
 ## Конвенции
 
