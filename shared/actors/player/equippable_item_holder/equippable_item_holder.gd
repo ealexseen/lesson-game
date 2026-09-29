@@ -27,6 +27,10 @@ func _on_peer_entered_world(_peer_id: int) -> void:
 	if not _is_owner_peer():
 		return
 	
+	# о себе заботиться не нужно, а rpc_id на себя движок запрещает
+	if _peer_id == owner_player.peer_id:
+		return
+	
 	if current_key != null:
 		rpc_id(_peer_id, "_remote_equip", current_key)
 	if _last_direction != 0:

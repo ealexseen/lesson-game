@@ -30,7 +30,6 @@ WorldSync="*res://core/global_world/world_sync.gd"
 
 [debug]
 
-file_logging/enable_file_logging=false
 file_logging/enable_file_logging.pc=false
 gdscript/warnings/unused_signal=0
 settings/size/initial_screen=0

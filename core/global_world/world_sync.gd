@@ -220,6 +220,10 @@ func _grant_pickup_remote(_item_key: int) -> void:
 func _check_snapshot_request() -> void:
 	if is_server() or not NetworkManager.is_connected_to_game():
 		return
+	# заявку шлём только со своим игроком на руках: с этого момента остальные включают
+	# нам репликацию, а она требует, чтобы наши узлы уже существовали
+	if MatchState.local_player == null:
+		return
 	
 	var scene := get_tree().current_scene
 	

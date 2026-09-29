@@ -14,6 +14,9 @@ const REMOTE_TELEPORT_DISTANCE := 300.0 # скачок сетевой цели �
 const VISIBILITY_RADIUS := 1500.0 # дальше не шлём своё движение
 const VISIBILITY_HYSTERESIS := 250.0 # чтобы не мигало на границе
 const VISIBILITY_INTERVAL := 0.5 # как часто пересчитываем видимость
+## Радиус интереса пока выключен: движение уходит всем, кто уже на карте. Включать
+## вместе с замером трафика — далёкие игроки тогда замирают и «прыгают» при подходе.
+const INTEREST_RADIUS_ENABLED := false
 
 @onready var equippable_item_holder: EquippableItemHolder = %EquippableItemHolder
 @onready var camera: Camera2D = $Camera2D
@@ -51,9 +54,10 @@ func _ready() -> void:
 	_setup_nameplate()
 	
 	if is_local():
-		# новый пир по умолчанию «видим», гасим это сразу, пока он не на карте
 		multiplayer.peer_connected.connect(_on_peer_connected)
 		MatchState.participants_changed.connect(_apply_visibility)
+		# не ждём первого тика: иначе первые полсекунды движение никому не уходит
+		_apply_visibility()
 
 
 func _on_peer_connected(_peer_id: int) -> void:
@@ -101,6 +105,13 @@ func _apply_visibility() -> void:
 	if synchronizer == null:
 		return
 	
+	# Видимость по умолчанию выключена, движение уходит только отмеченным пирам.
+	# Иначе движок начинает синхронизацию сразу после подключения пира, когда тот ещё
+	# в лобби: пакет с путём узла приходит раньше самих узлов, получатель его
+	# отбрасывает, а повторной попытки у отправителя нет — репликация в эту сторону
+	# залипает навсегда. Поэтому первый пакет уходит только вошедшему в мир пиру.
+	synchronizer.set_visibility_public(false)
+	
 	for peer_id in multiplayer.get_peers():
 		synchronizer.set_visibility_for(peer_id, _is_visible_to(peer_id))
 	
@@ -120,6 +131,9 @@ func _is_visible_to(_peer_id: int) -> bool:
 	
 	if other == null:
 		return false
+	
+	if not INTEREST_RADIUS_ENABLED:
+		return true
 	
 	var limit := VISIBILITY_RADIUS
 	

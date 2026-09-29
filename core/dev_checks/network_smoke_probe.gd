@@ -11,10 +11,15 @@ class_name NetworkSmokeProbe extends Node
 ##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --name=Client --expect-game [--world]
 ##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autohost --name=Host --stress --hold=20
 ##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --name=Bot1 --bot --hold=20
+##   godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --name=Watcher --expect-game --watch-name=Bot
 ##
 ## Успех печатает SMOKE CLIENT CONNECTED / SMOKE CLIENT REJECTED: … / SMOKE LAN FOUND n /
-## SMOKE CLIENT SEES MOTION / SMOKE CLIENT SEES TREE GONE / SMOKE CLIENT WORLD OK /
-## SMOKE STRESS OK / SMOKE BOT DONE.
+## SMOKE CLIENT SEES MOTION / SMOKE CLIENT SEES PEER n MOTION / SMOKE CLIENT SEES TREE GONE /
+## SMOKE CLIENT WORLD OK / SMOKE STRESS OK / SMOKE BOT DONE.
+##
+## --watch-name=<ник> или --watch-peer=<id> (по умолчанию хост) — за движением чьего игрока
+## следить. Так проверяется, что движение клиента доходит до другого клиента, а не только
+## от хоста: peer_id в ENet случайный, поэтому надёжнее ник.
 ## Жёсткий таймаут гарантирует выход даже при ошибке.
 
 const CLIENT_TIMEOUT := 8.0
@@ -53,6 +58,10 @@ var _world_started_at := -1.0
 var _host_moved := false
 var _client_checked := false
 var _watch_position := Vector2.ZERO
+var _watch_peer := 1 # за чьим игроком следим в движении (--watch-peer)
+var _watch_name := "" # либо по нику (--watch-name): peer_id в ENet случайный
+var _watch_resolved := 0
+var _watch_seen := false
 
 var _motion_seen := false
 var _tree_path := ""
@@ -83,6 +92,12 @@ func _ready() -> void:
 	
 	print("SMOKE ARGS: ", _args)
 	_expect_reject = _args.has("expect-reject")
+	
+	if _args.has("watch-peer"):
+		_watch_peer = int(_args["watch-peer"])
+	
+	if _args.has("watch-name"):
+		_watch_name = str(_args["watch-name"])
 	_write_report(0, "started")
 	
 	if not is_instance_valid(NetworkManager):
@@ -461,23 +476,78 @@ func _tick_client() -> void:
 	
 	if not _args.has("world"):
 		if _motion_seen:
-			_finish(0, "SMOKE CLIENT SEES MOTION")
+			_finish(0, _motion_marker())
 		elif _elapsed >= GAME_WATCH_TIME + CLIENT_TIMEOUT:
-			_finish(1, "SMOKE CLIENT FAIL: движение хоста не дошло")
+			_finish(1, "SMOKE CLIENT FAIL: движение игрока %s не дошло" % _watch_label())
 		return
 	
 	_tick_client_world()
 
 
+## Следим за сетевой целью чужого игрока: она не двигается, если репликация не дошла.
 func _tick_client_motion() -> void:
 	if _motion_seen:
 		return
 	
-	var host_player: Player = MatchState.players.get(1)
+	_watch_first()
 	
-	if host_player != null and host_player.net_target.position.distance_to(_watch_position) > MOTION_DELTA:
+	var target := _watch_target()
+	
+	if target == null or not _watch_seen:
+		return
+	
+	if target.net_target.position.distance_to(_watch_position) > MOTION_DELTA:
 		_motion_seen = true
-		print("SMOKE CLIENT SEES MOTION: ", host_player.net_target.position)
+		print(_motion_marker(), ": ", target.net_target.position)
+
+
+## Позицию для сравнения берём как можно раньше: иначе первое же штатное обновление
+## от чужого игрока зачтётся за движение.
+func _watch_first() -> void:
+	if _watch_seen:
+		return
+	
+	var target := _watch_target()
+	
+	if target == null:
+		return
+	
+	_watch_seen = true
+	_watch_position = target.net_target.position
+	print("SMOKE CLIENT WATCH: ", _watch_position)
+
+
+## Кого смотрим: по нику (--watch-name) или по peer_id (--watch-peer, по умолчанию хост).
+## Ник надёжнее: peer_id в ENet случайный, а не «2, 3, 4…».
+func _watch_target() -> Player:
+	if _watch_name == "":
+		return MatchState.players.get(_watch_peer)
+	
+	for peer_id in MatchState.participants:
+		if MatchState.participant_name(peer_id) == _watch_name:
+			_watch_resolved = peer_id
+			return MatchState.players.get(peer_id)
+	
+	return null
+
+
+func _watch_label() -> String:
+	if _watch_name != "":
+		return _watch_name
+	
+	return str(_watch_peer)
+
+
+func _motion_marker() -> String:
+	var peer_id := _watch_peer
+	
+	if _watch_name != "":
+		peer_id = _watch_resolved
+	
+	if peer_id == 1:
+		return "SMOKE CLIENT SEES MOTION"
+	
+	return "SMOKE CLIENT SEES PEER %d MOTION" % peer_id
 
 
 func _tick_client_world() -> void:
@@ -588,8 +658,7 @@ func _check_client_game() -> void:
 		host_player.nameplate.text, expected_color.to_html(false)
 	])
 	
-	_watch_position = host_player.net_target.position
-	print("SMOKE CLIENT WATCH: ", _watch_position)
+	_watch_first()
 
 
 # Подбор предмета: обе стороны целятся в один и тот же предмет
