@@ -54,9 +54,15 @@ $env:APPDATA = Join-Path (Get-Location) '.dsh_user'   # иначе движок 
 
 ## Справка по API Godot 4.6 (Context7)
 
-Если нужен точный ответ по API движка — использовать MCP Context7 с явным ID, не поиск по памяти:
+Если нужен точный ответ по API движка — брать его из Context7, а не по памяти.
 
-- `libraryId`: `/websites/godotengine_en_4_6`
+Основной путь — REST-эндпоинт через `web_fetch`: MCP-сервер в профиле по умолчанию не смонтирован, а REST не платит ничего за схемы инструментов:
+
+```
+https://context7.com/api/v1/websites/godotengine_en_4_6?type=txt&topic=<тема>&tokens=2500
+```
+
+Если в сессии всё же видны инструменты `mcp__context7__*` — можно и ими, ID тот же: `libraryId` = `/websites/godotengine_en_4_6`.
 
 Почему именно он: верхняя по релевантности запись в поиске Context7 — `/godotengine/godot-docs`, и она прибита к ветке **4.5**. В проекте разрешён только 4.6, поэтому ID задаётся явно и `resolve-library-id` не вызывается.
 
