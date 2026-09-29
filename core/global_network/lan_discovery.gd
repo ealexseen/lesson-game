@@ -138,9 +138,50 @@ func _send_beacon() -> void:
 		"players": MatchState.participants.size(),
 		"max": MatchState.MAX_PLAYERS,
 		"has_password": _has_password,
-	})
+	}).to_utf8_buffer()
 	
-	_udp.put_packet(payload.to_utf8_buffer())
+	for address in _beacon_targets():
+		_udp.set_dest_address(address, DISCOVERY_PORT)
+		_udp.put_packet(payload)
+
+
+## Куда шлём бекон: ограниченный бродкаст плюс направленный бродкаст каждой частной
+## подсети. Интерфейсов на машине обычно несколько (Ethernet, Hamachi, Hyper-V, VPN),
+## а ограниченный бродкаст уходит только в один из них — тот, что выбрала таблица
+## маршрутизации, поэтому в списке найденных игр может оказаться недостижимый адрес.
+func _beacon_targets() -> PackedStringArray:
+	var targets := PackedStringArray([BROADCAST_ADDRESS])
+	
+	for address in IP.get_local_addresses():
+		var directed := _directed_broadcast(address)
+		
+		if directed != "" and not targets.has(directed):
+			targets.append(directed)
+	
+	return targets
+
+
+## Направленный бродкаст считаем только для частных диапазонов: там маска /24 в быту
+## почти всегда верна. У Hamachi (25.x) своя маска, угадывать её нельзя — ему хватает
+## ограниченного бродкаста.
+func _directed_broadcast(_address: String) -> String:
+	var parts := _address.split(".")
+	
+	if parts.size() != 4 or _address.contains(":"):
+		return ""
+	
+	var first := int(parts[0])
+	var second := int(parts[1])
+	var is_private := (
+		first == 10
+		or (first == 172 and second >= 16 and second <= 31)
+		or (first == 192 and second == 168)
+	)
+	
+	if not is_private:
+		return ""
+	
+	return "%s.%s.%s.255" % [parts[0], parts[1], parts[2]]
 
 
 func _receive_beacons(_delta: float) -> void:

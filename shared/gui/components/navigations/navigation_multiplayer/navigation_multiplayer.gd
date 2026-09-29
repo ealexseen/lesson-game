@@ -6,6 +6,9 @@ class_name NavigationMultiplayer extends NavigationBase
 const DEFAULT_ADDRESS := "127.0.0.1"
 const LAN_TITLE_DEFAULT := "Найденные игры в локальной сети:"
 const LAN_TITLE_HOSTING := "Найденные игры: вы хост, игра видна другим"
+## Хосту важно продиктовать тот адрес, который видит другая машина: интерфейсов обычно
+## несколько (Ethernet, Hamachi, Hyper-V), и «правильный» знает только сам игрок.
+const LAN_TITLE_HOSTING_ADDRESS := "Вы хост. Адрес для других: %s"
 const LAN_TITLE_UNAVAILABLE := "Найденные игры: поиск недоступен, введите адрес вручную"
 
 var _hint_elapsed := 0.0
@@ -62,11 +65,30 @@ func _process(_delta: float) -> void:
 
 func _refresh_lan_hint() -> void:
 	if NetworkManager.is_hosting():
-		lan_title.text = LAN_TITLE_HOSTING
+		var addresses := NetworkManager.local_addresses()
+		
+		if addresses.is_empty():
+			lan_title.text = LAN_TITLE_HOSTING
+		else:
+			lan_title.text = LAN_TITLE_HOSTING_ADDRESS % _addresses_text(addresses)
 	elif NetworkManager.lan.search_unavailable():
 		lan_title.text = LAN_TITLE_UNAVAILABLE
 	else:
 		lan_title.text = LAN_TITLE_DEFAULT
+
+
+## По адресу не видно, какой интерфейс за ним стоит, а для другой машины это решающее:
+## у Hamachi свой диапазон 25.0.0.0/8, и обычно именно он и работает между домами.
+func _addresses_text(_addresses: PackedStringArray) -> String:
+	var parts := PackedStringArray()
+	
+	for address in _addresses:
+		if address.begins_with("25."):
+			parts.append("%s (Hamachi)" % address)
+		else:
+			parts.append(address)
+	
+	return ", ".join(parts)
 
 
 func _exit_tree() -> void:

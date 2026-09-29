@@ -107,9 +107,28 @@ func host_game(_name: String, _game_password: String = "") -> String:
 	MatchState.clear_participants()
 	MatchState.add_participant(multiplayer.get_unique_id(), player_name)
 	lan.start_broadcasting(player_name, DEFAULT_PORT, _password != "")
+	print("HOST LOCAL ADDRESSES: ", ", ".join(local_addresses()))
 	server_started.emit()
 	
 	return ""
+
+
+## Адреса, по которым до этой машины могут дотянуться другие: без loopback и
+## автоконфигурации, только IPv4 (ENet в проекте ходит по IPv4).
+## Интерфейсов бывает много (Ethernet, Hamachi, Hyper-V, VPN) — какой из них видят
+## остальные, знает только сам игрок, поэтому показываем все.
+func local_addresses() -> PackedStringArray:
+	var addresses := PackedStringArray()
+	
+	for address in IP.get_local_addresses():
+		if address.contains(":") or address.begins_with("127.") or address.begins_with("169.254."):
+			continue
+		if addresses.has(address):
+			continue
+		
+		addresses.append(address)
+	
+	return addresses
 
 
 ## Подключиться к игре. Возвращает текст ошибки или пустую строку.
@@ -233,8 +252,8 @@ func _on_connection_failed() -> void:
 	var address := _pending_address
 	disconnect_game()
 	connection_failed.emit(
-		"Не удалось подключиться к %s:%d — хост недоступен или нет свободных мест" % [
-			address, DEFAULT_PORT
+		"Не удалось подключиться к %s:%d. Проверьте адрес (для Hamachi или VPN нужен его IP) и что на машине хоста разрешён входящий UDP %d в файрволе." % [
+			address, DEFAULT_PORT, DEFAULT_PORT
 		]
 	)
 

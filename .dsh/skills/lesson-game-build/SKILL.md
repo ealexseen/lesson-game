@@ -1,0 +1,110 @@
+---
+name: lesson-game-build
+description: Release-build recipe for the LessonGame Godot 4.6 project — bump the version, export the Windows preset headlessly, pack the RAR with WinRAR, smoke-run the result.
+whenToUse: Use when asked to build a new LessonGame version ("собери билд", "новая версия", "сделай сборку"), or when a Godot export under the DSH sandbox fails (missing export template, denied junction).
+---
+
+# LessonGame: сборка релизного билда
+
+## Что должно получиться
+
+`build/v.0.0.N/` — три файла и архив рядом:
+
+| Файл | Размер (ориентир) |
+|---|---|
+| `LessonGame.exe` | 99.71 МБ (это шаблон `windows_release_x86_64.exe` плюс иконка) |
+| `LessonGame.console.exe` | 0.16 МБ (обёртка с консолью, `debug/export_console_wrapper=2`) |
+| `LessonGame.pck` | ~6 МБ (`binary_format/embed_pck=false`) |
+| `v.0.0.N.rar` | ~32 МБ (те же три файла в корне архива) |
+
+`build/` в `.gitignore` — в гите живёт только `export_presets.cfg`, поэтому номер версии фиксируется коммитом этого файла.
+
+## Номер версии
+
+Следующая версия — максимальная в `build/` плюс один. В `export_presets.cfg` при сборке меняется **только** поле `export_path` (так во всей истории коммитов), и оно указывает на **последнюю собранную** версию:
+
+```
+export_path="build/v.0.0.N/LessonGame.exe"
+```
+
+## Шаги
+
+Всё в одном процессе PowerShell: `APPDATA` действует только на текущий процесс.
+
+0. Гейт загрузки, чтобы кэш импорта был свежим (иначе экспорт может собрать старое):
+   `& $godot --headless --path . --quit` — exit 0 и только баннер.
+1. Шаблоны экспорта — один раз на машину, см. ниже.
+2. Поднять номер в `export_presets.cfg`.
+3. Экспорт:
+
+```powershell
+$env:APPDATA = Join-Path (Get-Location) '.dsh_user'
+$godot = 'C:\Program Files\Godot_v4.6-stable_win64.exe\Godot_v4.6-stable_win64_console.exe'
+New-Item -ItemType Directory -Force 'build\v.0.0.N' | Out-Null
+& $godot --headless --path . --export-release "Windows Desktop" "build/v.0.0.N/LessonGame.exe" *> '.dsh_user\build-export.log'
+"exit=$LASTEXITCODE"
+```
+
+   Успех — `exit=0` и `[ DONE ] savepack` в конце лога. Если шаблона нет, файлы просто не появятся (или экспорт вернёт ненулевой код) — см. раздел про шаблоны.
+4. Архив (WinRAR стоит в `C:\Program Files\WinRAR\Rar.exe`):
+
+```powershell
+Push-Location 'build\v.0.0.N'
+& 'C:\Program Files\WinRAR\Rar.exe' a -ep1 -m5 'v.0.0.N.rar' 'LessonGame.exe' 'LessonGame.console.exe' 'LessonGame.pck'
+Pop-Location
+& 'C:\Program Files\WinRAR\Rar.exe' l 'build\v.0.0.N\v.0.0.N.rar'   # сверка содержимого
+```
+
+   `-ep1` — без путей: в архиве три файла в корне, как во всех прошлых версиях.
+5. Смоук собранного:
+
+```powershell
+$env:APPDATA = Join-Path (Get-Location) '.dsh_user'
+& '.\build\v.0.0.N\LessonGame.console.exe' --headless --quit *> '.dsh_user\build-run.log'
+"exit=$LASTEXITCODE"
+```
+
+   Успех — exit 0 и только баннер движка. Единственная допустимая строка `ERROR` — `Failed to read the root certificate store` (системное хранилище сертификатов; она же появляется в прогонах редактора и к проекту не относится).
+
+Логи всех шагов — в `.dsh_user\build-*.log` (папка в `.gitignore`), поэтому в корне проекта после сборки ничего лишнего не остаётся.
+
+## Шаблоны экспорта под песочницей
+
+Перенаправленный `APPDATA` уводит и папку шаблонов: движок ищет их в `.dsh_user\Godot\export_templates\`, а не в реальном профиле. Junction туда создать **политика не даёт** (`Access is denied`), поэтому файлы копируются — один раз на машину, ~100 МБ:
+
+```powershell
+$src = Join-Path $env:USERPROFILE 'AppData\Roaming\Godot\export_templates\4.6.stable'
+$dst = Join-Path (Get-Location) '.dsh_user\Godot\export_templates\4.6.stable'
+New-Item -ItemType Directory -Force $dst | Out-Null
+'version.txt','windows_release_x86_64.exe','windows_release_x86_64_console.exe' |
+	ForEach-Object { Copy-Item (Join-Path $src $_) (Join-Path $dst $_) -Force }
+```
+
+## Скрипт
+
+`build.ps1` в этой же папке делает шаги 0–5 (смоук включительно). На машине запрещён запуск `.ps1` политикой, поэтому сначала Bypass в том же процессе:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass -Force
+& .dsh\skills\lesson-game-build\build.ps1 -DryRun        # показать план, ничего не менять
+& .dsh\skills\lesson-game-build\build.ps1                # собрать следующую версию
+& .dsh\skills\lesson-game-build\build.ps1 -Version 16    # конкретная версия
+```
+
+Альтернатива без смены политики в сессии: `powershell -NoProfile -ExecutionPolicy Bypass -File .dsh\skills\lesson-game-build\build.ps1`.
+
+Параметры: `-DryRun`, `-NoRar`, `-SkipSmoke`, `-Godot <путь к exe>`. Если скрипт не сработал — шаги выше авторитетнее, они проверены руками на v.0.0.15.
+
+**Две особенности машины, из-за которых скрипт выглядит именно так** (обе проверены):
+
+- `pwsh` не установлен, шелл — **Windows PowerShell 5.1**. Скрипт держим совместимым с 5.1 (`#Requires -Version 5.1`, никаких `??` и тернарников из 7-й версии).
+- PowerShell 5.1 читает файлы **без BOM как ANSI**, поэтому кириллица внутри `.ps1` ломает разбор (`Unexpected token`). Скрипт поэтому **чисто ASCII**: комментарии и сообщения в нём английские, а русские тексты живут здесь, в SKILL.md. Если всё же добавляешь кириллицу в `.ps1` — сохраняй файл в UTF-8 **с BOM**.
+
+## Грабли
+
+- **В билд попадает рабочее дерево, а не коммит.** Незакоммиченные правки уедут в сборку — сначала решить, то ли это, что нужно.
+- **Размеры — быстрый признак неудачи.** `LessonGame.exe` около 99.71 МБ, `.pck` около 6 МБ. Заметно другие числа (или отсутствие `.pck`) означают, что экспорт собрал не то.
+- **`APPDATA` ставить в том же процессе**, где идёт экспорт или запуск: переменная не переживает запуск нового процесса PowerShell.
+- **Не запускать смоук-прогон параллельно с сетевым смоуком**: если игра останется висеть без `--quit`, она займёт порт 8910 и следующий прогон упадёт с «Не удалось создать игру на порту 8910» (такое уже случалось, когда на машине крутился чужой хост).
+- RAR от WinRAR пишет `Evaluation copy. Please register.` — это нормально, архив создаётся.
+- Версия видна только в `export_presets.cfg`; в самой игре её нигде нет (`application/product_version` пустой). Показывать версию в UI — отдельная задача.

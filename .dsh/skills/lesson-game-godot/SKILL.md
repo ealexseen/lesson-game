@@ -1,7 +1,7 @@
 ---
 name: lesson-game-godot
 description: Verification recipes for the LessonGame Godot 4.6 project — headless gates, smoke scenes, report files — plus how to look up exact Godot 4.6 engine API answers through Context7.
-whenToUse: Use when verifying a change in LessonGame, when a Godot CLI run misbehaves, or when an exact Godot 4.6 engine API detail is needed and guessing is not acceptable.
+whenToUse: Use when verifying a change in LessonGame, when a Godot CLI run misbehaves, when a client cannot connect from another machine, or when an exact Godot 4.6 engine API detail is needed and guessing is not acceptable.
 ---
 
 # LessonGame: проверка и справка по API
@@ -33,24 +33,40 @@ $env:APPDATA = Join-Path (Get-Location) '.dsh_user'   # иначе движок 
 
 ## Смоук-сцены
 
+Обе сцены запускаются headless, аргументы смоука идут после `--`. Запуск игры руками — тот же exe без `--headless`.
+
 ```powershell
 # изоляция игровых событий по игроку (M0)
 & $godot --headless --path . res://core/dev_checks/players_isolation_check.tscn
 
-# сетевой смоук (M1–M5), аргументы после --
-& $godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autohost --name=Host --password=secret --start-game
-& $godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --password=secret --expect-game
+# сетевой смоук (M1–M5)
+& $godot --headless --path . res://core/dev_checks/network_smoke.tscn -- <аргументы>
 ```
 
-Успех печатают маркеры `M0 CHECK: OK`, `SMOKE CLIENT CONNECTED`, `SMOKE CLIENT SEES MOTION`, `SMOKE CLIENT NAMEPLATE: ник цвет`, `SMOKE STRESS OK`, `SMOKE BOT DONE`. Провал — exit 1.
+Аргументы сетевого смоука:
+
+| Роль | Аргументы |
+|---|---|
+| хост | `--autohost --name=Host [--password=secret]` и один из `--start-game` / `--solo-start` / `--stress`, плюс `[--world]` |
+| клиент | `--autoconnect=127.0.0.1 [--password=secret] [--expect-game] [--world] [--watch-name=<ник>` либо `--watch-peer=<id>]` |
+| отказ по паролю | `--autoconnect=127.0.0.1 --password=wrong --expect-reject` |
+| поиск в локальной сети | `--lan-search` |
+| бот для стресса | `--autoconnect=127.0.0.1 --bot --hold=N` |
+
+Маркеры успеха: `M0 CHECK: OK`, `SMOKE CLIENT CONNECTED`, `SMOKE CLIENT REJECTED: …`, `SMOKE LAN FOUND n`, `SMOKE CLIENT SEES MOTION`, `SMOKE CLIENT SEES PEER n MOTION`, `SMOKE CLIENT NAMEPLATE: ник цвет` (цвет обязан совпасть с `SMOKE HOST COLOR`), `SMOKE CLIENT SEES TREE GONE`, `SMOKE CLIENT WORLD OK`, `SMOKE EQUIP CLIENT: <узел> face_right=<bool> own_empty=<bool>`, `SMOKE USE CLIENT: <узел> playing=true`, `SMOKE STRESS OK`, `SMOKE BOT DONE`. Провал — exit 1.
+
+`--watch-name` / `--watch-peer` задают, за движением чьего игрока следить. Без них смоук смотрит только на хоста, а репликация между двумя клиентами (через релей) остаётся непроверенной — так и проскочил баг с поздним входом. Ник надёжнее id: peer_id в ENet случайный, а не «2, 3, 4…».
 
 ## Что ловит грабли
 
 - `--check-only --script res://<путь>.gd` **не годится как проверка**: автолоады в этом режиме недоступны, отсюда ложные `Identifier not found: EventSystem`, и exit 0 даже при реальной ошибке.
 - Новый `class_name` не виден движку, пока не выполнен `--headless --import`.
-- stdout под `Start-Process` буферизуется и теряет хвост. Итог прогона надёжнее писать файлом: `--report=<имя>.txt` → `res://_dsh_reports/<имя>.txt` (папку создать заранее).
+- stdout под `Start-Process` буферизуется и теряет хвост. Итог прогона надёжнее писать файлом: `--report=<имя>.txt` → `res://_dsh_reports/<имя>.txt` (папку создать заранее). Много процессов удобно поднимать одним заданием (`Start-Process` в цикле), но одиночный прогон надёжнее гонять через `& $godot ... *> файл` — по одному процессу на задание.
 - Два окна игры конфликтуют за порт LAN-поиска 8911: слушатель только один, второй ждёт освобождения. Подключение по адресу работает всегда.
 - Долгие прогоны (стресс с ботами, сеть) стоит уводить в фоновую задачу, а не ждать синхронно.
+- **Чужой запущенный экземпляр игры занимает порт 8910**, и прогон падает с «Не удалось создать игру на порту 8910» (или клиент подключается к чужому лобби). Перед серией прогонов проверить: `Get-Process -Name 'Godot*'` и `netstat -ano -p UDP | Select-String '8910'`.
+- `SMOKE FAIL: раннер не передал управление пробе` — это не падение игры, а страховка раннера (`RUNNER_TIMEOUT = 30` с). Она срабатывает там, где сцена не меняется, например когда клиент не смог подключиться: ENet замечает недоступный адрес примерно через 30 с, то есть позже страховки. Путь «хост недоступен» так не проверить.
+- Не подключается **с другой машины** — это почти всегда не код: нужен разрешённый входящий UDP 8910/8911 в файрволе хоста и правильный адрес (при Hamachi/VPN — его IP). Полный чек-лист — §11 в `docs/multiplayer_plan.md`, хост показывает свои адреса в лобби.
 
 ## Справка по API Godot 4.6 (Context7)
 
