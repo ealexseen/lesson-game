@@ -18,6 +18,7 @@ param(
 	[switch]$DryRun,            # print what would happen, change nothing
 	[switch]$NoRar,             # skip the archive
 	[switch]$SkipSmoke,         # skip running the exported game
+	[switch]$SkipFirewall,      # skip the firewall check (port rule + block rules)
 	[string]$Godot = 'C:\Program Files\Godot_v4.6-stable_win64.exe\Godot_v4.6-stable_win64_console.exe'
 )
 
@@ -26,16 +27,83 @@ $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
 Set-Location $root
 
+$skillDir = $PSScriptRoot                       # firewall-allow.ps1 lives next to this file
 $userDir = Join-Path $root '.dsh_user'          # logs live here: the folder is git-ignored
 $presetPath = Join-Path $root 'export_presets.cfg'
 $rarBin = 'C:\Program Files\WinRAR\Rar.exe'
 $templates = @('version.txt', 'windows_release_x86_64.exe', 'windows_release_x86_64_console.exe')
 $expectedExeMb = 99.7
 $allowedError = 'root certificate store'        # harmless Windows message, not ours
+$portRuleName = 'LessonGame UDP 8910-8911'
 
 function Write-Step([string]$text) {
 	Write-Host ''
 	Write-Host "== $text" -ForegroundColor Cyan
+}
+
+function Get-FirewallRuleStore {
+	$key = 'HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules'
+	return @((Get-ItemProperty $key -ErrorAction SilentlyContinue).PSObject.Properties | Where-Object { $_.Name -notlike 'PS*' })
+}
+
+function Test-Admin {
+	$identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+	return (New-Object Security.Principal.WindowsPrincipal($identity)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+## What is wrong with the firewall for this project. Reads the rule store from the
+## registry, so it works without administrator rights.
+function Get-FirewallState([string]$projectRoot) {
+	$buildRoot = Join-Path $projectRoot 'build'
+	$rules = Get-FirewallRuleStore
+	$portRules = @($rules | Where-Object { $_.Value -match 'Action=Allow' -and $_.Value -match 'Protocol=17' -and $_.Value -match 'LPort=8910' })
+	$programRules = @($rules | Where-Object { $_.Value -match [regex]::Escape($buildRoot) -and $_.Value -match 'Action=Allow' })
+	$blockRules = @($rules | Where-Object { $_.Value -match [regex]::Escape($buildRoot) -and $_.Value -match 'Action=Block' })
+	
+	$reasons = @()
+	if ($blockRules.Count) { $reasons += "block rules in the build folder: $($blockRules.Count)" }
+	# A per-program allow only covers the build it was answered for: the next version
+	# has a new exe path, so Windows asks again (or blocks silently).
+	if (-not $portRules.Count) { $reasons += 'no port rule covering every build (UDP 8910/8911)' }
+	
+	return @{
+		NeedsFix = [bool]$reasons.Count
+		Reason = ($reasons -join '; ')
+		ProgramAllows = $programRules.Count
+	}
+}
+
+## Applies the fix: runs the helper directly when already elevated, otherwise asks
+## for elevation once (UAC). Returns $false when the helper could not run.
+function Repair-Firewall([string]$projectRoot) {
+	$helper = Join-Path $skillDir 'firewall-allow.ps1'
+	$buildRoot = Join-Path $projectRoot 'build'
+	
+	if (-not (Test-Path $helper)) {
+		Write-Warning "helper not found: $helper"
+		return $false
+	}
+	
+	try {
+		if (Test-Admin) {
+			& $helper -BuildRoot $buildRoot | Out-Null
+			return $true
+		}
+		
+		$process = Start-Process powershell -Verb RunAs -Wait -PassThru -ArgumentList @(
+			'-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $helper, '-BuildRoot', $buildRoot
+		)
+		
+		if ($process.ExitCode -ne 0) {
+			Write-Warning "helper exit=$($process.ExitCode)"
+			return $false
+		}
+		
+		return $true
+	} catch {
+		Write-Warning "elevation declined or failed: $($_.Exception.Message)"
+		return $false
+	}
 }
 
 Write-Host "LessonGame build - $root"
@@ -171,6 +239,39 @@ if ($DryRun) {
 			Write-Warning "errors in the run log, see $runLog"
 		} else {
 			Write-Host '   exit=0, no errors'
+		}
+	}
+	
+}
+
+# --- 8. Windows Firewall: a blocked build looks exactly like "cannot connect".
+# The check only reads the registry, so it runs in dry-run too; the fix does not.
+if (-not $SkipFirewall) {
+	Write-Step 'firewall'
+	$firewall = Get-FirewallState $root
+	
+	if ($firewall.ProgramAllows) {
+		Write-Host "   note: some builds already have their own allow rules: $($firewall.ProgramAllows) (a new version gets a new path and asks again)"
+	}
+	
+	if (-not $firewall.NeedsFix) {
+		Write-Host '   ok: port rule present, no block rules for the build folder'
+	} elseif ($DryRun) {
+		Write-Host "   [dry-run] would fix: $($firewall.Reason)"
+	} else {
+		Write-Host "   needs fix: $($firewall.Reason)"
+		
+		if (Repair-Firewall $root) {
+			$firewall = Get-FirewallState $root
+			
+			if ($firewall.NeedsFix) {
+				Write-Warning "still not clean: $($firewall.Reason)"
+			} else {
+				Write-Host '   fixed'
+			}
+		} else {
+			Write-Warning 'could not fix automatically, run this from an elevated PowerShell:'
+			Write-Host "   powershell -NoProfile -ExecutionPolicy Bypass -File `"$skillDir\firewall-allow.ps1`""
 		}
 	}
 }
