@@ -402,7 +402,19 @@ func snapshot() -> Dictionary:
 		"destroyed": _destroyed.keys(),
 		"spawned": _spawned.duplicate(true),
 		"next_spawn_id": _next_spawn_id,
+		"players": _player_positions(),
 	}
+
+
+## Где на самом деле стоят игроки. Без этого вошедший рисовал бы чужие копии по
+## месту появления — то есть не там, где они есть, пока не придёт первый пакет.
+func _player_positions() -> Dictionary:
+	var positions := {}
+	
+	for peer_id in MatchState.players:
+		positions[peer_id] = MatchState.players[peer_id].position
+	
+	return positions
 
 
 @rpc("any_peer", "call_remote", "reliable")
@@ -451,6 +463,15 @@ func _apply_snapshot(_data: Dictionary) -> void:
 				str(info.get("scene", "")),
 				info.get("transform", Transform2D.IDENTITY)
 			)
+	
+	# игроки: сразу ставим чужие копии на настоящие места, до первой синхронизации
+	var players: Dictionary = _data.get("players", {})
+	
+	for peer_id in players:
+		var player: Player = MatchState.players.get(int(peer_id))
+		
+		if player != null and player != MatchState.local_player:
+			player.apply_remote_position(players[peer_id])
 
 
 # Спавн лута

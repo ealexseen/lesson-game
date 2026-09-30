@@ -14,7 +14,7 @@ class_name Player
 @export var spawn: Marker2D
 
 const REMOTE_SMOOTH_SPEED := 15.0 # плавность чужого игрока
-const REMOTE_TELEPORT_DISTANCE := 300.0 # скачок сетевой цели — это телепорт
+const REMOTE_TELEPORT_DISTANCE := 150.0 # скачок сетевой цели — это телепорт, не движение
 const REMOTE_CORRECT_SPEED := 8.0 # как быстро копия возвращается к сетевой цели
 const REMOTE_VELOCITY_SMOOTH := 0.4 # сглаживание оценки скорости чужого игрока
 const REMOTE_VELOCITY_DECAY := 12.0 # гашение оценки скорости, когда игрок встал
@@ -124,6 +124,21 @@ func is_local() -> bool:
 
 ## Первый пакет синхронизации пришёл: место известно, копию можно показывать.
 func _on_synchronized() -> void:
+	_sync_hide_left = 0.0
+	visible = true
+
+
+## Точная позиция чужого игрока из снапшота: ставим копию сразу на место,
+## без ожидания первого пакета синхронизации.
+func apply_remote_position(_position: Vector2) -> void:
+	if is_local():
+		return
+	
+	position = _position
+	net_target.position = _position
+	_remote_velocity = Vector2.ZERO
+	_remote_last_target = _position
+	_remote_target_elapsed = 0.0
 	_sync_hide_left = 0.0
 	visible = true
 
