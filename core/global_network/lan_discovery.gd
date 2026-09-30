@@ -26,13 +26,14 @@ var _server_port := 0
 var _has_password := false
 var _servers: Dictionary[String, Dictionary] = {}
 var _ages: Dictionary[String, float] = {}
+var _dtls_enabled := false
 
 
 func _ready() -> void:
 	set_process(false)
 
 
-func start_broadcasting(_name: String, _port: int, _passworded: bool) -> void:
+func start_broadcasting(_name: String, _port: int, _passworded: bool, _dtls: bool = false) -> void:
 	stop()
 	
 	_udp = PacketPeerUDP.new()
@@ -41,6 +42,7 @@ func start_broadcasting(_name: String, _port: int, _passworded: bool) -> void:
 	_server_name = _name
 	_server_port = _port
 	_has_password = _passworded
+	_dtls_enabled = _dtls
 	_broadcasting = true
 	_elapsed = BEACON_INTERVAL
 	set_process(true)
@@ -135,6 +137,7 @@ func _send_beacon() -> void:
 	var payload := JSON.stringify({
 		"name": _server_name,
 		"port": _server_port,
+		"dtls": _dtls_enabled,
 		"players": MatchState.participants.size(),
 		"max": MatchState.MAX_PLAYERS,
 		"has_password": _has_password,

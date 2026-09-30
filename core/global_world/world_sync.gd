@@ -13,16 +13,22 @@ signal peer_entered_world(_peer_id: int)
 const HITBOX_LAYER_MASK := 64 # слой hitbox (layer_7)
 const MAX_HIT_DISTANCE := 250.0 # насколько далеко от игрока может начаться удар
 const DEBUG_RAY := false # рисовать отладочный луч удара
+const VISIBILITY_INTERVAL := 0.5 # как часто сервер пересчитывает видимость движения
 
 var _destroyed: Dictionary[String, bool] = {}
 var _spawned: Dictionary[int, Dictionary] = {}
 var _peers_in_world: Dictionary[int, bool] = {}
+var _visible_cache := {}
+var _visibility_elapsed := 0.0
 var _next_spawn_id := 0
 var _snapshot_scene: Node = null
 
 
 func _ready() -> void:
 	NetworkManager.server_started.connect(reset)
+	# состав меняется — сразу пересчитываем, кому какое движение слать
+	MatchState.participants_changed.connect(refresh_visibility)
+	multiplayer.peer_connected.connect(_on_peer_connected)
 
 
 ## В одиночной игре сервером считаем себя.
@@ -34,8 +40,127 @@ func reset() -> void:
 	_destroyed.clear()
 	_spawned.clear()
 	_peers_in_world.clear()
+	_visible_cache.clear()
 	_next_spawn_id = 0
 	_snapshot_scene = null
+
+
+# Движение: ввод владельца и поправки сервера
+
+## Владелец сообщает серверу свой ввод: номер кадра, оси, прыжок и своё предсказание.
+func send_input(_seq: int, _axis: float, _jump: bool, _position: Vector2) -> void:
+	if is_server() or not NetworkManager.is_connected_to_game():
+		return
+	
+	rpc_id(1, "_submit_input", _seq, _axis, _jump, _position)
+
+
+## Ввод принимаем только за своего игрока: отправитель и есть его владелец,
+## поэтому подделать чужое движение этой ручкой нельзя.
+@rpc("any_peer", "call_remote", "reliable")
+func _submit_input(_seq: int, _axis: float, _jump: bool, _position: Vector2) -> void:
+	if not is_server():
+		return
+	
+	var player: Player = MatchState.players.get(multiplayer.get_remote_sender_id())
+	
+	if player == null:
+		return
+	
+	player.apply_remote_input(_seq, _axis, _jump, _position)
+
+
+## Сервер подтверждает владельцу: «на этом твоём кадре ты стоял вот здесь».
+func send_reconcile(_peer_id: int, _seq: int, _position: Vector2) -> void:
+	if not is_server() or not NetworkManager.is_connected_to_game():
+		return
+	if _peer_id == multiplayer.get_unique_id() or _peer_id == 1:
+		return
+	
+	rpc_id(_peer_id, "_reconcile", _seq, _position)
+
+
+@rpc("authority", "call_remote", "reliable")
+func _reconcile(_seq: int, _position: Vector2) -> void:
+	var player: Player = MatchState.local_player
+	
+	if player != null:
+		player.reconcile(_seq, _position)
+
+
+# Видимость движения: решает сервер, потому что движение рассылает он
+
+func _on_peer_connected(_peer_id: int) -> void:
+	refresh_visibility()
+
+
+## Пересчитать видимость всем игрокам сразу (состав изменился).
+func refresh_visibility() -> void:
+	if not is_server():
+		return
+	
+	for peer_id in MatchState.players:
+		_apply_player_visibility(MatchState.players[peer_id])
+
+
+func _tick_visibility(_delta: float) -> void:
+	if not is_server():
+		return
+	
+	_visibility_elapsed += _delta
+	
+	if _visibility_elapsed < VISIBILITY_INTERVAL:
+		return
+	
+	_visibility_elapsed = 0.0
+	refresh_visibility()
+
+
+func _apply_player_visibility(_player: Player) -> void:
+	var synchronizer: MultiplayerSynchronizer = _player.net_target.get_node_or_null(
+		"MultiplayerSynchronizer"
+	)
+	
+	if synchronizer == null:
+		return
+	
+	# видимость по умолчанию выключена: первый пакет уходит только тому, у кого
+	# уже есть наши узлы, иначе кэш путей у получателя не подтвердится и
+	# репликация в эту сторону залипнет (разбор — §10 плана)
+	synchronizer.set_visibility_public(false)
+	
+	for peer_id in multiplayer.get_peers():
+		synchronizer.set_visibility_for(peer_id, _is_visible_to(_player, peer_id))
+	
+	synchronizer.update_visibility()
+
+
+func _is_visible_to(_player: Player, _peer_id: int) -> bool:
+	# пока пир не на карте, у него наших узлов нет
+	if not is_peer_in_world(_peer_id):
+		return false
+	
+	# владельцу своё движение не шлём: он его предсказывает сам
+	if _player.peer_id == _peer_id:
+		return false
+	
+	if not Player.INTEREST_RADIUS_ENABLED:
+		return true
+	
+	var other: Player = MatchState.players.get(_peer_id)
+	
+	if other == null:
+		return false
+	
+	var key := "%d:%d" % [_player.peer_id, _peer_id]
+	var limit := Player.VISIBILITY_RADIUS
+	
+	if _visible_cache.get(key, false):
+		limit += Player.VISIBILITY_HYSTERESIS
+	
+	var visible := _player.global_position.distance_to(other.global_position) <= limit
+	_visible_cache[key] = visible
+	return visible
 
 
 ## Пир уже на карте: только таким шлём движение, иначе у них сыплются ошибки
@@ -51,6 +176,7 @@ func is_peer_in_world(_peer_id: int) -> bool:
 
 func _process(_delta: float) -> void:
 	_check_snapshot_request()
+	_tick_visibility(_delta)
 
 
 # Удары

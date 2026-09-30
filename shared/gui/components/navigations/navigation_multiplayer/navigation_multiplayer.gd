@@ -16,6 +16,7 @@ var _hint_elapsed := 0.0
 @onready var name_input: LineEdit = $PanelContainer/VBoxContainer/NameRow/NameInput
 @onready var address_input: LineEdit = $PanelContainer/VBoxContainer/AddressRow/AddressInput
 @onready var password_input: LineEdit = $PanelContainer/VBoxContainer/PasswordRow/PasswordInput
+@onready var dtls_check: CheckBox = $PanelContainer/VBoxContainer/PasswordRow/DtlsCheck
 @onready var host_button: ButtonBase = $PanelContainer/VBoxContainer/ButtonsRow/HostButton
 @onready var join_button: ButtonBase = $PanelContainer/VBoxContainer/ButtonsRow/JoinButton
 @onready var start_button: ButtonBase = $PanelContainer/VBoxContainer/ButtonsRow/StartButton
@@ -104,7 +105,9 @@ func _on_host_pressed() -> void:
 	_apply_name()
 	_set_status("")
 	
-	var error := NetworkManager.host_game(name_input.text, password_input.text)
+	var error := NetworkManager.host_game(
+		name_input.text, password_input.text, dtls_check.button_pressed
+	)
 	
 	if error != "":
 		_set_status(error)
@@ -117,7 +120,9 @@ func _on_join_pressed() -> void:
 	_apply_name()
 	_set_status("Подключение к %s…" % address_input.text.strip_edges())
 	
-	var error := NetworkManager.join_game(address_input.text, name_input.text, password_input.text)
+	var error := NetworkManager.join_game(
+		address_input.text, name_input.text, password_input.text, dtls_check.button_pressed
+	)
 	
 	if error != "":
 		_set_status(error)
@@ -135,11 +140,22 @@ func _on_start_pressed() -> void:
 
 
 func _on_lan_host_activated(_index: int) -> void:
-	var address = lan_list.get_item_metadata(_index)
+	var entry = lan_list.get_item_metadata(_index)
 	
-	if address is String:
-		address_input.text = address
-		_set_status("Адрес найденной игры: %s" % address)
+	if entry is Dictionary:
+		var target := str(entry.get("target", ""))
+		var needs_dtls := bool(entry.get("dtls", false))
+		address_input.text = target
+		# у найденной игры видно, шифруется ли канал: галочку ставим сами
+		dtls_check.button_pressed = needs_dtls
+		_set_status("Адрес найденной игры: %s%s" % [
+			target, " — включил DTLS, как у этой игры" if needs_dtls else ""
+		])
+		return
+	
+	if entry is String:
+		address_input.text = entry
+		_set_status("Адрес найденной игры: %s" % entry)
 
 
 func _leave_lobby() -> void:
@@ -178,19 +194,34 @@ func _refresh_servers(_servers: Dictionary) -> void:
 	for address in addresses:
 		var info: Dictionary = _servers[address]
 		var lock_mark := " (с паролем)" if info.get("has_password", false) else ""
+		# у сервера может быть свой порт: клик по записи должен подставить и его
+		var beacon_port := int(info.get("port", NetworkManager.DEFAULT_PORT))
+		var target: String = address
 		
-		lan_list.add_item("%s — %s (%d/%d)%s" % [
+		if beacon_port != NetworkManager.DEFAULT_PORT:
+			target = "%s:%d" % [address, beacon_port]
+		
+		var dtls_mark := " (DTLS)" if info.get("dtls", false) else ""
+		
+		lan_list.add_item("%s — %s (%d/%d)%s%s" % [
 			info.get("name", "Игра"),
-			address,
+			target,
 			int(info.get("players", 1)),
 			int(info.get("max", MatchState.MAX_PLAYERS)),
 			lock_mark,
+			dtls_mark,
 		])
-		lan_list.set_item_metadata(lan_list.item_count - 1, address)
+		lan_list.set_item_metadata(lan_list.item_count - 1, {
+			"target": target,
+			"dtls": bool(info.get("dtls", false)),
+		})
 
 
 func _on_server_started() -> void:
-	_set_status("Игра создана, порт %d. Ожидание игроков…" % NetworkManager.DEFAULT_PORT)
+	_set_status("Игра создана, порт %d.%s Ожидание игроков…" % [
+		NetworkManager.port,
+		" Канал шифруется (DTLS)." if dtls_check.button_pressed else "",
+	])
 	_refresh_buttons()
 
 

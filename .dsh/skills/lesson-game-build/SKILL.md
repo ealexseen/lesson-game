@@ -15,7 +15,8 @@ whenToUse: Use when asked to build a new LessonGame version ("собери би�
 | `LessonGame.exe` | 99.71 МБ (это шаблон `windows_release_x86_64.exe` плюс иконка) |
 | `LessonGame.console.exe` | 0.16 МБ (обёртка с консолью, `debug/export_console_wrapper=2`) |
 | `LessonGame.pck` | ~6 МБ (`binary_format/embed_pck=false`) |
-| `v.0.0.N.rar` | ~32 МБ (те же три файла в корне архива) |
+| `run_server.bat` | ~1 КБ, копируется из `tools/server/` — запуск выделенного сервера двойным кликом |
+| `v.0.0.N.rar` | ~32 МБ (те же четыре файла в корне архива) |
 
 `build/` в `.gitignore` — в гите живёт только `export_presets.cfg`, поэтому номер версии фиксируется коммитом этого файла.
 

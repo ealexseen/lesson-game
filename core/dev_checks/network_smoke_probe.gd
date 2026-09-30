@@ -37,6 +37,9 @@ const BOT_STEP := 5.0
 const REPORT_DIR := "res://_dsh_reports/"
 const ADMIN_DELAY := 3.0
 const ADMIN_QUIT_DELAY := 2.0
+const TELEPORT_DELAY := 6.0
+const TELEPORT_CHECK_DELAY := 2.0
+const TELEPORT_DELTA := Vector2(2000.0, 0.0)
 
 # тайминги мира: считаются от момента, когда карта загрузилась
 const BREAK_DELAY := 6.0
@@ -89,6 +92,9 @@ var _spawn_reported := {}
 var _admin_sent := false
 var _admin_sent_at := 0.0
 var _expect_kick := false
+var _teleported := false
+var _teleport_checked := false
+var _teleport_before := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -661,6 +667,24 @@ func _tick_bot() -> void:
 		Input.action_release("left")
 		Input.action_release("right")
 		Input.action_press("left" if phase == 0 else "right")
+	
+	if _args.has("teleport") and not _teleported and _elapsed >= TELEPORT_DELAY:
+		_teleported = true
+		_teleport_before = MatchState.local_player.position
+		# подделка: клиент двигает себя сам, сервер об этом не просил
+		MatchState.local_player.position += TELEPORT_DELTA
+		# дальше стоим на месте: так видно, откатила ли серверная правда подделку
+		Input.action_release("left")
+		Input.action_release("right")
+		print("SMOKE CLIENT TELEPORTS: %s -> %s" % [
+			_teleport_before, MatchState.local_player.position
+		])
+	
+	if _teleported and not _teleport_checked and _elapsed >= TELEPORT_DELAY + TELEPORT_CHECK_DELAY:
+		_teleport_checked = true
+		print("SMOKE CLIENT AFTER TELEPORT: %s (до подделки %s)" % [
+			MatchState.local_player.position, _teleport_before
+		])
 	
 	if _elapsed < _hold_seconds():
 		return

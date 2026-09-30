@@ -45,6 +45,8 @@ const MAX_SYNC_PACKET_SIZE := 65536
 const MAX_DELTA_PACKET_SIZE := 4096
 
 var mode: Mode = Mode.OFFLINE
+## Порт текущего соединения: сервер слушает его, клиент на него подключается.
+var port: int = DEFAULT_PORT
 var player_name: String = DEFAULT_NAME
 var lan: LanDiscovery
 ## Сообщение для следующего экрана (например, почему выкинуло из игры).
@@ -135,16 +137,17 @@ func peer_ping(_peer_id: int) -> int:
 func host_game(_name: String, _game_password: String = "", _use_dtls: bool = false) -> String:
 	disconnect_game()
 	
+	port = DEFAULT_PORT
 	max_clients = MatchState.MAX_PLAYERS - 1
 	var peer := ENetMultiplayerPeer.new()
 	var error := peer.create_server(
-		DEFAULT_PORT, max_clients, SERVER_CHANNELS, PEER_IN_BANDWIDTH, PEER_OUT_BANDWIDTH
+		port, max_clients, SERVER_CHANNELS, PEER_IN_BANDWIDTH, PEER_OUT_BANDWIDTH
 	)
 	
 	if error != OK:
 		return _host_error_text(error)
 	
-	_enable_server_dtls(peer, _use_dtls or _dtls_enabled)
+	var dtls_on := _enable_server_dtls(peer, _use_dtls or _dtls_enabled)
 	
 	player_name = _clean_name(_name)
 	_password = _game_password
@@ -154,47 +157,47 @@ func host_game(_name: String, _game_password: String = "", _use_dtls: bool = fal
 	
 	MatchState.clear_participants()
 	MatchState.add_participant(multiplayer.get_unique_id(), player_name)
-	lan.start_broadcasting(player_name, DEFAULT_PORT, _password != "")
+	lan.start_broadcasting(player_name, port, _password != "", dtls_on)
 	print("HOST LOCAL ADDRESSES: ", ", ".join(local_addresses()))
 	server_started.emit()
 	
 	return ""
 
 
-## Поднять выделенный сервер: за этой машиной нет игрока, её нет в списке
-## участников, а матч стартует сам, когда подключится _min_players игроков.
-## Возвращает текст ошибки или пустую строку.
-func start_dedicated(
-	_game_password: String = "",
-	_min_players_count: int = 1,
-	_server_name: String = DEDICATED_NAME,
-	_token: String = "",
-	_use_dtls: bool = false
-) -> String:
+## Поднять выделенный сервер по настройкам (из файла конфигурации и аргументов).
+## За этой машиной нет игрока, её нет в списке участников, а матч стартует сам,
+## когда подключится нужное число игроков. Возвращает текст ошибки или пустую строку.
+func start_dedicated(_settings: Dictionary) -> String:
 	disconnect_game()
 	
-	# на выделенном сервере хост не занимает место: входят все MAX_PLAYERS
-	max_clients = MatchState.MAX_PLAYERS
+	port = int(_settings.get("port", DEFAULT_PORT))
+	_password = str(_settings.get("password", ""))
+	_min_players = maxi(1, int(_settings.get("min_players", 1)))
+	_admin_token = str(_settings.get("admin_token", ""))
+	var server_name := str(_settings.get("name", DEDICATED_NAME))
+	var use_dtls := bool(_settings.get("dtls", false))
+	
+	# на выделенном сервере хост не занимает место: входят все max_players
+	max_clients = clampi(
+		int(_settings.get("max_players", MatchState.MAX_PLAYERS)), 1, MatchState.MAX_PLAYERS
+	)
 	var peer := ENetMultiplayerPeer.new()
 	var error := peer.create_server(
-		DEFAULT_PORT, max_clients, SERVER_CHANNELS, PEER_IN_BANDWIDTH, PEER_OUT_BANDWIDTH
+		port, max_clients, SERVER_CHANNELS, PEER_IN_BANDWIDTH, PEER_OUT_BANDWIDTH
 	)
 	
 	if error != OK:
 		return _host_error_text(error)
 	
-	_enable_server_dtls(peer, _use_dtls or _dtls_enabled)
+	var dtls_on := _enable_server_dtls(peer, use_dtls or _dtls_enabled)
 	
-	_password = _game_password
-	_min_players = maxi(1, _min_players_count)
-	_admin_token = _token
 	mode = Mode.DEDICATED
 	# игрока-хозяина нет, поэтому «хостом» не помечается никто
 	MatchState.is_host = false
 	multiplayer.multiplayer_peer = peer
 	
 	MatchState.clear_participants()
-	lan.start_broadcasting(_server_name, DEFAULT_PORT, _password != "")
+	lan.start_broadcasting(server_name, port, _password != "", dtls_on)
 	print("SERVER LOCAL ADDRESSES: ", ", ".join(local_addresses()))
 	server_started.emit()
 	
@@ -216,13 +219,28 @@ func _cmdline_args() -> Dictionary:
 
 
 func _start_dedicated_from_args(_args: Dictionary) -> void:
-	var error := start_dedicated(
-		str(_args.get("password", "")),
-		int(_args.get("min-players", "1")),
-		str(_args.get("name", DEDICATED_NAME)),
-		str(_args.get("admin-token", "")),
-		_args.has("dtls")
-	)
+	var config_path := str(_args.get("config", ServerConfig.default_path()))
+	var config := ServerConfig.load_or_create(config_path)
+	
+	if config.created:
+		print("SERVER: создан файл настроек %s — правьте его и перезапускайте" % config_path)
+	
+	# файл задаёт настройки, аргументы командной строки перекрывают их
+	var settings := {
+		"name": str(_args.get("name", config.get_string("name", DEDICATED_NAME))),
+		"port": int(_args.get("port", config.get_int("port", DEFAULT_PORT))),
+		"password": str(_args.get("password", config.get_string("password", ""))),
+		"admin_token": str(_args.get("admin-token", config.get_string("admin_token", ""))),
+		"min_players": int(_args.get("min-players", config.get_int("min_players", 1))),
+		"max_players": int(
+			_args.get("max-players", config.get_int("max_players", MatchState.MAX_PLAYERS))
+		),
+		"dtls": _args.has("dtls") or config.get_bool("dtls", false),
+	}
+	
+	print("SERVER: настройки из %s" % config_path)
+	
+	var error := start_dedicated(settings)
 	
 	if error != "":
 		push_error(error)
@@ -231,16 +249,16 @@ func _start_dedicated_from_args(_args: Dictionary) -> void:
 		return
 	
 	print("SERVER READY: порт %d, игроков до %d, автостарт от %d, админ-команды %s, DTLS %s" % [
-		DEFAULT_PORT, max_clients, _min_players,
+		port, max_clients, _min_players,
 		"включены" if _admin_token != "" else "выключены",
 		"включён" if _dtls_enabled else "выключен"
 	])
 # Шифрование канала
 
 ## DTLS для сервера: самоподписанный сертификат на время работы.
-func _enable_server_dtls(_peer: ENetMultiplayerPeer, _use_dtls: bool) -> void:
+func _enable_server_dtls(_peer: ENetMultiplayerPeer, _use_dtls: bool) -> bool:
 	if not _use_dtls:
-		return
+		return false
 	
 	_make_self_signed_certificate()
 	
@@ -248,10 +266,11 @@ func _enable_server_dtls(_peer: ENetMultiplayerPeer, _use_dtls: bool) -> void:
 	
 	if connection == null or _dtls_key == null or _dtls_certificate == null:
 		print("SERVER: DTLS не включился — нет сертификата или соединения")
-		return
+		return false
 	
 	var error := connection.dtls_server_setup(TLSOptions.server(_dtls_key, _dtls_certificate))
 	print("SERVER: DTLS %s (код %d)" % ["включён" if error == OK else "не включился", error])
+	return error == OK
 
 
 ## DTLS для клиента: канал шифруется, но сертификат сервера не проверяется —
@@ -320,13 +339,15 @@ func join_game(
 ) -> String:
 	disconnect_game()
 	
-	var address := _address.strip_edges()
+	var parsed := split_address(_address)
+	var address: String = parsed["address"]
+	port = parsed["port"]
 	
 	if address.is_empty():
 		return "Укажите адрес хоста"
 	
 	var peer := ENetMultiplayerPeer.new()
-	var error := peer.create_client(address, DEFAULT_PORT)
+	var error := peer.create_client(address, port)
 	
 	if error != OK:
 		return "Не удалось подключиться к «%s» (код %d)" % [address, error]
@@ -344,6 +365,23 @@ func join_game(
 	multiplayer.multiplayer_peer = peer
 	
 	return ""
+
+
+## Адрес можно писать как «192.168.0.10» или «192.168.0.10:9000»: сервер со своим
+## портом должен быть достижим и без правки констант.
+func split_address(_value: String) -> Dictionary:
+	var address := _value.strip_edges()
+	var parsed_port := DEFAULT_PORT
+	var separator := address.rfind(":")
+	
+	if separator > 0:
+		var tail := address.substr(separator + 1)
+		
+		if tail.is_valid_int():
+			parsed_port = int(tail)
+			address = address.substr(0, separator)
+	
+	return {"address": address, "port": parsed_port}
 
 
 func disconnect_game() -> void:
@@ -404,9 +442,9 @@ func _clean_name(_value: String) -> String:
 func _host_error_text(_error: int) -> String:
 	match _error:
 		ERR_ALREADY_IN_USE:
-			return "Порт %d уже занят" % DEFAULT_PORT
+			return "Порт %d уже занят" % port
 		ERR_CANT_CREATE:
-			return "Не удалось создать игру на порту %d" % DEFAULT_PORT
+			return "Не удалось создать игру на порту %d" % port
 		_:
 			return "Не удалось создать игру (код %d)" % _error
 
@@ -443,7 +481,7 @@ func _on_connection_failed() -> void:
 	disconnect_game()
 	connection_failed.emit(
 		"Не удалось подключиться к %s:%d. Проверьте адрес (для Hamachi или VPN нужен его IP) и что на машине хоста разрешён входящий UDP %d в файрволе." % [
-			address, DEFAULT_PORT, DEFAULT_PORT
+			address, port, port
 		]
 	)
 

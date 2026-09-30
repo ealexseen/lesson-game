@@ -207,6 +207,7 @@ $exportLog = Join-Path $userDir 'build-export.log'
 
 if ($DryRun) {
 	Write-Host "   [dry-run] & `"$Godot`" --headless --path . --export-release `"Windows Desktop`" `"$exePath`""
+	Write-Host '   [dry-run] would copy: tools\server\run_server.bat'
 } else {
 	New-Item -ItemType Directory -Force $buildDir | Out-Null
 	$env:APPDATA = $userDir
@@ -232,14 +233,21 @@ if ($DryRun) {
 		Write-Host "   vs v.0.0.$last, exe diff: $diff bytes"
 	}
 	
-	# --- 6. Archive
+	# --- 6. Server launcher: lets a dedicated server be started by a double click
+	Write-Step 'server launcher'
+	$launcher = Join-Path $root 'tools\server\run_server.bat'
+	if (-not (Test-Path $launcher)) { throw "server launcher not found: $launcher" }
+	Copy-Item $launcher (Join-Path $buildDir 'run_server.bat') -Force
+	Write-Host '   run_server.bat (server.cfg is created next to the game on first run)'
+	
+	# --- 7. Archive
 	if (-not $NoRar) {
 		Write-Step 'archive'
 		if (-not (Test-Path $rarBin)) { throw "WinRAR not found: $rarBin" }
 		
 		Push-Location $buildDir
 		try {
-			$rarCode = Invoke-Native $rarBin @('a', '-ep1', '-m5', "$versionName.rar", 'LessonGame.exe', 'LessonGame.console.exe', 'LessonGame.pck')
+			$rarCode = Invoke-Native $rarBin @('a', '-ep1', '-m5', "$versionName.rar", 'LessonGame.exe', 'LessonGame.console.exe', 'LessonGame.pck', 'run_server.bat')
 			if ($rarCode -ne 0) { throw "Rar.exe returned exit=$rarCode" }
 		} finally {
 			Pop-Location
@@ -249,7 +257,7 @@ if ($DryRun) {
 		Write-Host ("   {0}: {1} MB" -f $rarFile.Name, [math]::Round($rarFile.Length / 1MB, 2))
 	}
 	
-	# --- 7. Smoke run of the exported game
+	# --- 8. Smoke run of the exported game
 	if (-not $SkipSmoke) {
 		Write-Step 'smoke run'
 		$runLog = Join-Path $userDir 'build-run.log'

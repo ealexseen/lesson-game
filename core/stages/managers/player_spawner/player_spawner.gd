@@ -110,6 +110,9 @@ func _spawn(_peer_id: int, _index: int) -> void:
 	
 	player.set_multiplayer_authority(_peer_id)
 	get_parent().add_child(player)
+	# движение считает сервер: цель синхронизатора принадлежит ему, а не владельцу,
+	# поэтому владелец своё движение предсказывает, а рассылает истину сервер
+	player.net_target.set_multiplayer_authority(1)
 	_players[_peer_id] = player
 
 

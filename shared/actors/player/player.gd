@@ -1,6 +1,10 @@
 extends CharacterBody2D
 class_name Player
 
+## Игрок. Движение считает сервер: владелец присылает ввод и предсказывает
+## результат у себя, чтобы управление не ждало сети. Если сервер посчитал иначе,
+## владелец возвращается к его позиции и пересчитывает неподтверждённые кадры.
+
 @export var speed: float = 500.0 # speed
 @export var jump_velocity: float = -400.0 # скорость прыжка
 @export var friction: float = 0.15 # трение
@@ -11,12 +15,16 @@ class_name Player
 
 const REMOTE_SMOOTH_SPEED := 15.0 # плавность чужого игрока
 const REMOTE_TELEPORT_DISTANCE := 300.0 # скачок сетевой цели — это телепорт
-const VISIBILITY_RADIUS := 1500.0 # дальше не шлём своё движение
+const VISIBILITY_RADIUS := 1500.0 # дальше не шлём чужое движение
 const VISIBILITY_HYSTERESIS := 250.0 # чтобы не мигало на границе
-const VISIBILITY_INTERVAL := 0.5 # как часто пересчитываем видимость
-## Радиус интереса пока выключен: движение уходит всем, кто уже на карте. Включать
-## вместе с замером трафика — далёкие игроки тогда замирают и «прыгают» при подходе.
+## Радиус интереса решает сервер (WorldSync): далёким игрокам чужое движение не уходит.
 const INTEREST_RADIUS_ENABLED := true
+
+const RECONCILE_INTERVAL := 0.5 # как часто сервер подтверждает позицию
+const RECONCILE_IGNORE := 4.0 # мельче этого расхождение не исправляем
+const REPLAY_LIMIT := 120 # сколько кадров истории держим (около 2 с)
+const INPUT_TIMEOUT := 0.5 # молчание владельца считаем нулевым вводом
+const RECONCILE_ERROR := 32.0 # с такого расхождения пишем в лог сервера
 
 @onready var equippable_item_holder: EquippableItemHolder = %EquippableItemHolder
 @onready var camera: Camera2D = $Camera2D
@@ -28,8 +36,20 @@ var save_equippable_item_holder_position = Vector2.ZERO
 
 var abilities: Dictionary = {}
 var can_shoot: bool = true
-var _visibility_elapsed := 0.0
-var _visible_cache: Dictionary[int, bool] = {}
+
+# ввод, который применяется к игроку в этом кадре: у владельца — с клавиатуры,
+# на сервере — из последнего сообщения владельца
+var input_axis := 0.0
+var input_jump := false
+var input_seq := 0 # владелец нумерует свои кадры
+var acked_seq := 0 # последний кадр, который сервер точно применил
+
+var _send_elapsed := 0.0
+var _reconcile_elapsed := 0.0
+var _last_input_at := 0.0 # сервер: когда пришёл последний ввод владельца
+var _reported_position := Vector2.ZERO # сервер: что владелец считает своим местом
+var _history: Array[Dictionary] = [] # владелец: кадры для пересчёта
+var _pending_reconcile: Dictionary = {}
 
 # Получаем гравитацию из проекта
 var gravity: float = ProjectSettings.get_setting('physics/2d/default_gravity')
@@ -49,19 +69,12 @@ func _exit_tree() -> void:
 func _ready() -> void:
 	save_equippable_item_holder_position = equippable_item_holder.position
 	camera.enabled = is_local()
-	# цель стартует на месте появления, иначе чужой игрок поедет к нулю
-	net_target.position = position
-	_setup_nameplate()
 	
-	if is_local():
-		multiplayer.peer_connected.connect(_on_peer_connected)
-		MatchState.participants_changed.connect(_apply_visibility)
-		# не ждём первого тика: иначе первые полсекунды движение никому не уходит
-		_apply_visibility()
-
-
-func _on_peer_connected(_peer_id: int) -> void:
-	_apply_visibility()
+	# цель стартует на месте появления, иначе чужая копия сначала поедет к нулю:
+	# место появления детерминированное, поэтому у всех пиров оно одинаковое
+	net_target.position = position
+	
+	_setup_nameplate()
 
 
 ## Ник и цвет показываем только у чужих игроков: своя табличка перед глазами мешает.
@@ -80,77 +93,11 @@ func is_local() -> bool:
 	return MatchState.local_player == self
 
 
-# Интерес к игроку: далёким пирам своё движение не шлём — это главный рычаг трафика.
-
-func _tick_visibility(_delta: float) -> void:
-	if not NetworkManager.is_connected_to_game():
-		return
-	
-	_visibility_elapsed += _delta
-	
-	if _visibility_elapsed < VISIBILITY_INTERVAL:
-		return
-	
-	_visibility_elapsed = 0.0
-	_apply_visibility()
-
-
-func _apply_visibility() -> void:
-	# состав может меняться и при отключении, когда пира уже нет
-	if not NetworkManager.is_connected_to_game():
-		return
-	
-	var synchronizer: MultiplayerSynchronizer = net_target.get_node_or_null("MultiplayerSynchronizer")
-	
-	if synchronizer == null:
-		return
-	
-	# Видимость по умолчанию выключена, движение уходит только отмеченным пирам.
-	# Иначе движок начинает синхронизацию сразу после подключения пира, когда тот ещё
-	# в лобби: пакет с путём узла приходит раньше самих узлов, получатель его
-	# отбрасывает, а повторной попытки у отправителя нет — репликация в эту сторону
-	# залипает навсегда. Поэтому первый пакет уходит только вошедшему в мир пиру.
-	synchronizer.set_visibility_public(false)
-	
-	for peer_id in multiplayer.get_peers():
-		synchronizer.set_visibility_for(peer_id, _is_visible_to(peer_id))
-	
-	synchronizer.update_visibility()
-
-
-func _is_visible_to(_peer_id: int) -> bool:
-	# пока пир не на карте, у него нет наших узлов — слать ему нечего
-	if not WorldSync.is_peer_in_world(_peer_id):
-		return false
-	
-	# серверу движение нужно всегда: он проверяет удары и рассылает мир
-	if _peer_id == 1:
-		return true
-	
-	var other: Player = MatchState.players.get(_peer_id)
-	
-	if other == null:
-		return false
-	
-	if not INTEREST_RADIUS_ENABLED:
-		return true
-	
-	var limit := VISIBILITY_RADIUS
-	
-	if _visible_cache.get(_peer_id, false):
-		limit += VISIBILITY_HYSTERESIS
-	
-	var visible := global_position.distance_to(other.global_position) <= limit
-	_visible_cache[_peer_id] = visible
-	return visible
-
-
 func _process(_delta: float) -> void:
 	if is_local():
-		_tick_visibility(_delta)
 		return
 	
-	# чужой игрок плавно едет за сетевой целью: своей физикой он не управляет
+	# чужой игрок плавно едет за сетевой целью: её пишет сервер
 	if position.distance_to(net_target.position) > REMOTE_TELEPORT_DISTANCE:
 		position = net_target.position
 	else:
@@ -173,18 +120,178 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if not is_local():
+	if is_local():
+		_owner_tick(_delta)
 		return
 	
-	move(_delta)
+	# сервер двигает чужих игроков сам, по вводу их владельцев
+	if WorldSync.is_server():
+		_server_tick(_delta)
+
+
+# Владелец: предсказание своего движения
+
+func _owner_tick(_delta: float) -> void:
+	_apply_pending_reconcile(_delta)
+	
+	input_axis = Input.get_axis("left", "right")
+	input_jump = Input.is_action_just_pressed("jump")
+	input_seq += 1
+	
+	_apply_input(_delta)
 	check_walking_energy_change(_delta)
 	save_player()
+	_record_history()
 	
-	# это значение уходит по сети остальным
-	net_target.position = position
+	if WorldSync.is_server():
+		# одиночная игра и хост: истину движения пишем сами
+		acked_seq = input_seq
+		net_target.position = position
+	else:
+		_send_input(_delta)
 	
 	if Input.is_action_pressed("use_item"):
 		equippable_item_holder.try_to_use_item()
+
+
+## Кадр владельца: по этой истории пересчитываем движение после поправки сервера.
+func _record_history() -> void:
+	_history.append({
+		"seq": input_seq,
+		"position": position,
+		"velocity": velocity,
+		"axis": input_axis,
+		"jump": input_jump,
+	})
+	
+	while _history.size() > REPLAY_LIMIT:
+		_history.pop_front()
+
+
+func _send_input(_delta: float) -> void:
+	# шлём каждый тик: тогда сервер применяет ровно тот же ввод, что и предсказание,
+	# и расхождение не растёт из-за разной частоты (пакет маленький, 60 Гц терпимо)
+	_send_elapsed = 0.0
+	WorldSync.send_input(input_seq, input_axis, input_jump, position)
+
+
+# Сервер: истина движения
+
+func _server_tick(_delta: float) -> void:
+	if _silent_too_long():
+		input_axis = 0.0
+		input_jump = false
+	
+	_apply_input(_delta)
+	# прыжок — одноразовое событие, дальше это просто удержание кнопки
+	input_jump = false
+	save_player()
+	net_target.position = position
+	
+	_reconcile_elapsed += _delta
+	
+	if _reconcile_elapsed < RECONCILE_INTERVAL:
+		return
+	
+	_reconcile_elapsed = 0.0
+	WorldSync.send_reconcile(peer_id, acked_seq, position)
+	_report_divergence()
+
+
+## Владелец может разойтись с нами — из-за потерь ввода или потому, что соврал.
+## Его присланная позиция на истину не влияет, но расхождение видно в логе сервера.
+func _report_divergence() -> void:
+	var divergence := position.distance_to(_reported_position)
+	
+	if divergence < RECONCILE_ERROR:
+		return
+	
+	print("SERVER: расхождение с %s — %.0f px (наша позиция %s)" % [
+		MatchState.participant_name(peer_id), divergence, position
+	])
+
+
+func _silent_too_long() -> bool:
+	if _last_input_at <= 0.0:
+		return false
+	
+	return float(Time.get_ticks_msec()) / 1000.0 - _last_input_at > INPUT_TIMEOUT
+
+
+## Сервер принял очередной ввод владельца.
+func apply_remote_input(_seq: int, _axis: float, _jump: bool, _position: Vector2) -> void:
+	input_seq = _seq
+	acked_seq = _seq
+	input_axis = _axis
+	input_jump = _jump
+	_reported_position = _position
+	_last_input_at = float(Time.get_ticks_msec()) / 1000.0
+
+
+## Владелец получил поправку: запоминаем и применим в начале следующего кадра.
+func reconcile(_seq: int, _position: Vector2) -> void:
+	_pending_reconcile = {"seq": _seq, "position": _position}
+
+
+func _apply_pending_reconcile(_delta: float) -> void:
+	if _pending_reconcile.is_empty():
+		return
+	
+	var acked: int = int(_pending_reconcile["seq"])
+	var server_position: Vector2 = _pending_reconcile["position"]
+	_pending_reconcile.clear()
+	
+	var index := _history_index(acked)
+	
+	if index < 0:
+		# истории не хватает: принимаем позицию сервера как есть
+		position = server_position
+		velocity = Vector2.ZERO
+		_history.clear()
+		return
+	
+	if _history[index]["position"].distance_to(server_position) < RECONCILE_IGNORE:
+		return
+	
+	# возвращаемся к подтверждённому кадру и пересчитываем всё, что сервер не подтвердил
+	_history = _history.slice(index)
+	_history[0]["position"] = server_position
+	position = server_position
+	velocity = _history[0]["velocity"]
+	
+	for i in range(1, _history.size()):
+		var frame: Dictionary = _history[i]
+		input_axis = frame["axis"]
+		input_jump = frame["jump"]
+		_apply_input(_delta)
+		frame["position"] = position
+		frame["velocity"] = velocity
+
+
+func _history_index(_seq: int) -> int:
+	for i in _history.size():
+		if int(_history[i]["seq"]) == _seq:
+			return i
+	
+	return -1
+
+
+## Движение по вводу: одна и та же функция у владельца, сервера и при пересчёте.
+func _apply_input(_delta: float) -> void:
+	if not is_on_floor():
+		velocity.y += gravity * _delta
+	
+	if input_jump and is_on_floor():
+		velocity.y = jump_velocity
+	
+	if input_axis != 0:
+		velocity.x = lerp(velocity.x, input_axis * speed, acceleration)
+	else:
+		velocity.x = lerp(velocity.x, 0.0, friction)
+	
+	equippable_item_holder.direction_flip(int(signf(input_axis)))
+	
+	move_and_slide()
 
 
 func check_walking_energy_change(_delta: float) -> void:
@@ -203,23 +310,8 @@ func save_player() -> void:
 
 
 func move(_delta: float) -> void:
-	# Применяем гравитацию
-	if not is_on_floor():
-		velocity.y += gravity * _delta
-	
-	if Input.is_action_just_pressed("jump") and is_on_floor():
-		velocity.y = jump_velocity
-	
-	var direction = Input.get_axis("left", "right")
-	
-	if direction != 0:
-		velocity.x = lerp(velocity.x, direction * speed, acceleration)
-	else:
-		velocity.x = lerp(velocity.x, 0.0, friction)
-	
-	equippable_item_holder.direction_flip(direction)
-
-	move_and_slide()
+	# оставлено для совместимости: движение идёт через _apply_input
+	_apply_input(_delta)
 
 
 func shoot() -> void:
