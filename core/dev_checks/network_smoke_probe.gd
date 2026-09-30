@@ -83,6 +83,7 @@ var _equip_checked := false
 var _host_used := false
 var _host_use_released := false
 var _use_checked := false
+var _spawn_reported := {}
 
 
 func _ready() -> void:
@@ -160,6 +161,17 @@ func _world_elapsed() -> float:
 
 
 ## Стресс: поднять игру и держать её, пока боты подключаются и ходят.
+## Печатаем точки появления: так видно, что игроки не встали в одну кучу.
+func _report_spawns() -> void:
+	for peer_id in MatchState.players:
+		if _spawn_reported.has(peer_id):
+			continue
+		
+		_spawn_reported[peer_id] = true
+		var player: Player = MatchState.players[peer_id]
+		print("SMOKE SPAWN %d: %s" % [peer_id, player.position])
+
+
 func _tick_host_stress() -> void:
 	if _game_started_at < 0.0:
 		_game_started_at = _elapsed
@@ -282,6 +294,8 @@ func _start_lan_search() -> void:
 # Хост
 
 func _tick_host() -> void:
+	_report_spawns()
+	
 	if _args.has("stress"):
 		_tick_host_stress()
 		return

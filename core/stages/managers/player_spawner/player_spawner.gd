@@ -9,9 +9,12 @@ class_name PlayerSpawner extends Node
 const PLAYER_SCENE_PATH := "res://shared/actors/player/player.tscn"
 const BULLET_SCENE_PATH := "res://shared/objects/bullet/bullet.tscn"
 const SPAWN_GROUP := "player_spawn"
-const SPAWN_OFFSET := Vector2(70.0, 0.0) # чтобы игроки не стояли друг в друге
+const SPAWN_COLUMNS := 10 # сколько игроков в ряду
+const SPAWN_STEP := 60.0 # шаг внутри ряда, шире персонажа
+const SPAWN_ROW_HEIGHT := 70.0 # высота ряда, чтобы не толкались в одной точке
 
 var _players: Dictionary[int, Player] = {}
+var _slots: Dictionary[int, int] = {} # peer_id → место на площадке
 var _player_scene: PackedScene
 var _bullet_scene: PackedScene
 
@@ -38,7 +41,6 @@ func _sync_players() -> void:
 		
 		if not _players.has(peer_id):
 			_spawn(peer_id, index)
-	
 	for peer_id in _players.keys():
 		if not wanted.has(peer_id):
 			_despawn(peer_id)
@@ -59,6 +61,41 @@ func _wanted_peer_ids() -> Array[int]:
 	return ids
 
 
+## Раскладываем игроков сеткой вокруг маркера. Линией пускать нельзя: площадка на
+## карте конечная, крайние оказываются за ней, падают и возвращаются `save_player`
+## в одну точку — получается та самая куча.
+static func spawn_offset(_index: int) -> Vector2:
+	var column := _index % SPAWN_COLUMNS
+	var row := int(float(_index) / float(SPAWN_COLUMNS))
+	var offset := Vector2(
+		column * SPAWN_STEP - SPAWN_STEP * float(SPAWN_COLUMNS - 1) * 0.5,
+		-row * SPAWN_ROW_HEIGHT
+	)
+	
+	# нечётные ряды сдвигаем на полшага: иначе второй ряд падает на головы первого
+	if row % 2 == 1:
+		offset.x += SPAWN_STEP * 0.5
+	
+	return offset
+
+
+## Место выдаём явно, а не по позиции в списке участников: список сортирован по
+## peer_id, а он случайный, и подключение «в середину» сдвигало бы индексы —
+## новые игроки вставали бы в уже занятые точки.
+func _slot_for(_peer_id: int) -> int:
+	if _slots.has(_peer_id):
+		return _slots[_peer_id]
+	
+	var slot := 0
+	var taken: Array = _slots.values()
+	
+	while taken.has(slot):
+		slot += 1
+	
+	_slots[_peer_id] = slot
+	return slot
+
+
 func _spawn(_peer_id: int, _index: int) -> void:
 	var player: Player = _player_scene.instantiate()
 	var marker := _spawn_marker()
@@ -69,7 +106,7 @@ func _spawn(_peer_id: int, _index: int) -> void:
 	player.spawn = marker
 	
 	if marker != null:
-		player.position = marker.position + SPAWN_OFFSET * _index
+		player.position = marker.position + spawn_offset(_slot_for(_peer_id))
 	
 	player.set_multiplayer_authority(_peer_id)
 	get_parent().add_child(player)
@@ -79,6 +116,7 @@ func _spawn(_peer_id: int, _index: int) -> void:
 func _despawn(_peer_id: int) -> void:
 	var player: Player = _players.get(_peer_id)
 	_players.erase(_peer_id)
+	_slots.erase(_peer_id)
 	
 	if is_instance_valid(player):
 		player.queue_free()

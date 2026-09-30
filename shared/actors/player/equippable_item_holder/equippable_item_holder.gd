@@ -43,7 +43,7 @@ func try_to_use_item() -> void:
 	
 	# рассылаем только когда анимация действительно началась, а не каждый кадр
 	if current_item.try_to_use() and _is_owner_peer():
-		rpc("_remote_use")
+		_send_to_world("_remote_use")
 
 
 func on_equip_item(player: Player, item_key) -> void:
@@ -53,7 +53,7 @@ func on_equip_item(player: Player, item_key) -> void:
 	_equip(item_key)
 	
 	if _is_owner_peer():
-		rpc("_remote_equip", item_key)
+		_send_to_world("_remote_equip", item_key)
 
 
 func on_unequip_item(player: Player) -> void:
@@ -63,7 +63,7 @@ func on_unequip_item(player: Player) -> void:
 	_unequip()
 	
 	if _is_owner_peer():
-		rpc("_remote_unequip")
+		_send_to_world("_remote_unequip")
 
 
 func direction_flip(direction: int) -> void:
@@ -73,8 +73,22 @@ func direction_flip(direction: int) -> void:
 	_last_direction = direction
 	_apply_flip(direction)
 	
-	if _is_owner_peer():
-		rpc("_remote_flip", direction)
+	# 0 — это «стою на месте», сторона не меняется, рассылать нечего
+	if direction != 0 and _is_owner_peer():
+		_send_to_world("_remote_flip", direction)
+
+
+## Рассылаем только тем, кто уже на карте. У пира в лобби наших узлов нет: он
+## отбросит пакет, напишет в лог Node not found и не подтвердит кэш путей.
+func _send_to_world(_method: StringName, _value = null) -> void:
+	for peer_id in multiplayer.get_peers():
+		if not WorldSync.is_peer_in_world(peer_id):
+			continue
+		
+		if _value == null:
+			rpc_id(peer_id, _method)
+		else:
+			rpc_id(peer_id, _method, _value)
 
 
 ## Рассылает только владелец игрока: у остальных это чужая экипировка.

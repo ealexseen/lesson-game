@@ -16,7 +16,7 @@ const VISIBILITY_HYSTERESIS := 250.0 # чтобы не мигало на гра�
 const VISIBILITY_INTERVAL := 0.5 # как часто пересчитываем видимость
 ## Радиус интереса пока выключен: движение уходит всем, кто уже на карте. Включать
 ## вместе с замером трафика — далёкие игроки тогда замирают и «прыгают» при подходе.
-const INTEREST_RADIUS_ENABLED := false
+const INTEREST_RADIUS_ENABLED := true
 
 @onready var equippable_item_holder: EquippableItemHolder = %EquippableItemHolder
 @onready var camera: Camera2D = $Camera2D
