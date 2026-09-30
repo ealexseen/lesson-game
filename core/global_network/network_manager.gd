@@ -4,7 +4,10 @@ extends Node
 ##
 ## Хост авторитетен по миру, клиент только подключается и получает состояние.
 ## Игрок попадает в список участников лишь после рукопожатия: так пароль нельзя
-## обойти сторонним клиентом. Игроки в мире появятся на этапе M2.
+## обойти сторонним клиентом.
+##
+## Режим DEDICATED — то же самое, но за машиной сервера нет игрока: её нет в списке
+## участников, а матч стартует сам, когда подключится нужное число игроков.
 
 signal server_started()
 signal server_stopped()
@@ -15,13 +18,14 @@ signal connection_failed(_reason: String)
 signal server_disconnected(_reason: String)
 signal join_rejected(_reason: String)
 
-enum Mode { OFFLINE, HOST, CLIENT }
+enum Mode { OFFLINE, HOST, CLIENT, DEDICATED }
 
 const DEFAULT_PORT := 8910
 const GAME_SCENE_PATH := "res://core/scenes/map_1/map_1.tscn"
 const MENU_SCENE_PATH := "res://core/scenes/menu/menu.tscn"
 const HANDSHAKE_TIMEOUT := 5.0
 const DEFAULT_NAME := "Игрок"
+const DEDICATED_NAME := "Выделенный сервер"
 # пауза перед отключением отклонённого клиента, чтобы причина успела дойти
 const REJECT_GRACE := 0.4
 
@@ -41,6 +45,8 @@ var _accepted: bool = false
 var _rejected: bool = false
 var _game_started: bool = false
 var _handshake_left: float = 0.0
+# выделенный сервер: сколько игроков ждать до автостарта
+var _min_players: int = 1
 
 
 func _ready() -> void:
@@ -56,14 +62,25 @@ func _ready() -> void:
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
+	
+	# запуск вида «godot --headless --path . -- --server»
+	var args := _cmdline_args()
+	
+	if args.has("server"):
+		_start_dedicated_from_args(args)
 
 
 func is_connected_to_game() -> bool:
 	return mode != Mode.OFFLINE
 
 
+## Мы серверная сторона: и обычный хост, и выделенный сервер.
 func is_hosting() -> bool:
-	return mode == Mode.HOST
+	return mode == Mode.HOST or mode == Mode.DEDICATED
+
+
+func is_dedicated() -> bool:
+	return mode == Mode.DEDICATED
 
 
 ## Пинг до пира в миллисекундах или -1, если измерить нельзя.
@@ -92,6 +109,7 @@ func peer_ping(_peer_id: int) -> int:
 func host_game(_name: String, _game_password: String = "") -> String:
 	disconnect_game()
 	
+	max_clients = MatchState.MAX_PLAYERS - 1
 	var peer := ENetMultiplayerPeer.new()
 	var error := peer.create_server(DEFAULT_PORT, max_clients)
 	
@@ -113,6 +131,69 @@ func host_game(_name: String, _game_password: String = "") -> String:
 	return ""
 
 
+## Поднять выделенный сервер: за этой машиной нет игрока, её нет в списке
+## участников, а матч стартует сам, когда подключится _min_players игроков.
+## Возвращает текст ошибки или пустую строку.
+func start_dedicated(
+	_game_password: String = "",
+	_min_players_count: int = 1,
+	_server_name: String = DEDICATED_NAME
+) -> String:
+	disconnect_game()
+	
+	# на выделенном сервере хост не занимает место: входят все MAX_PLAYERS
+	max_clients = MatchState.MAX_PLAYERS
+	var peer := ENetMultiplayerPeer.new()
+	var error := peer.create_server(DEFAULT_PORT, max_clients)
+	
+	if error != OK:
+		return _host_error_text(error)
+	
+	_password = _game_password
+	_min_players = maxi(1, _min_players_count)
+	mode = Mode.DEDICATED
+	# игрока-хозяина нет, поэтому «хостом» не помечается никто
+	MatchState.is_host = false
+	multiplayer.multiplayer_peer = peer
+	
+	MatchState.clear_participants()
+	lan.start_broadcasting(_server_name, DEFAULT_PORT, _password != "")
+	print("SERVER LOCAL ADDRESSES: ", ", ".join(local_addresses()))
+	server_started.emit()
+	
+	return ""
+
+
+## Аргументы командной строки (и движка, и после `--`) в виде словаря.
+func _cmdline_args() -> Dictionary:
+	var args := {}
+	
+	for argument in OS.get_cmdline_args() + OS.get_cmdline_user_args():
+		if not argument.begins_with("--"):
+			continue
+		
+		var parts := argument.lstrip("-").split("=", true, 1)
+		args[parts[0]] = parts[1] if parts.size() > 1 else ""
+	
+	return args
+
+
+func _start_dedicated_from_args(_args: Dictionary) -> void:
+	var error := start_dedicated(
+		str(_args.get("password", "")),
+		int(_args.get("min-players", "1")),
+		str(_args.get("name", DEDICATED_NAME))
+	)
+	
+	if error != "":
+		push_error(error)
+		print("SERVER FAILED: ", error)
+		get_tree().quit(1)
+		return
+	
+	print("SERVER READY: порт %d, игроков до %d, автостарт от %d" % [
+		DEFAULT_PORT, max_clients, _min_players
+	])
 ## Адреса, по которым до этой машины могут дотянуться другие: без loopback и
 ## автоконфигурации, только IPv4 (ENet в проекте ходит по IPv4).
 ## Интерфейсов бывает много (Ethernet, Hamachi, Hyper-V, VPN) — какой из них видят
@@ -160,7 +241,7 @@ func join_game(_address: String, _name: String, _game_password: String = "") -> 
 
 
 func disconnect_game() -> void:
-	var was_host := mode == Mode.HOST
+	var was_host := is_hosting()
 	
 	_close_peer()
 	
@@ -227,7 +308,7 @@ func _host_error_text(_error: int) -> String:
 # Сигналы MultiplayerAPI
 
 func _on_peer_connected(_peer_id: int) -> void:
-	if mode != Mode.HOST:
+	if not is_hosting():
 		return
 	
 	# в список участников игрок попадёт после рукопожатия
@@ -235,7 +316,7 @@ func _on_peer_connected(_peer_id: int) -> void:
 
 
 func _on_peer_disconnected(_peer_id: int) -> void:
-	if mode != Mode.HOST:
+	if not is_hosting():
 		return
 	
 	MatchState.remove_participant(_peer_id)
@@ -289,7 +370,7 @@ func _in_game_scene() -> bool:
 ## Клиент сообщает имя и пароль сразу после подключения.
 @rpc("any_peer", "call_remote", "reliable")
 func _submit_join(_client_name: String, _client_password: String) -> void:
-	if mode != Mode.HOST:
+	if not is_hosting():
 		return
 	
 	var sender := multiplayer.get_remote_sender_id()
@@ -305,8 +386,15 @@ func _submit_join(_client_name: String, _client_password: String) -> void:
 	MatchState.add_participant(sender, _clean_name(_client_name))
 	_sync_participants()
 	
+	# выделенному серверу кнопка «начать» недоступна: стартуем сами, когда набралось
+	var started_now := false
+	
+	if mode == Mode.DEDICATED and not _game_started and MatchState.participants.size() >= _min_players:
+		start_game()
+		started_now = true
+	
 	# игрок подключился к идущей игре — сразу отправляем его на карту
-	if _game_started:
+	if _game_started and not started_now:
 		rpc_id(sender, "_load_game_scene")
 	
 	participant_joined.emit(sender)
@@ -356,11 +444,12 @@ func _receive_participants(_list: Dictionary) -> void:
 
 # Начало игры
 
-## Хост начинает игру: все пиры синхронно переходят на карту.
+## Сервер начинает игру: все пиры синхронно переходят на карту.
 func start_game() -> void:
-	if mode != Mode.HOST:
+	if not is_hosting():
 		return
 	
+	print("GAME STARTED: участников %d" % MatchState.participants.size())
 	_game_started = true
 	rpc("_load_game_scene")
 	_load_game_scene()
