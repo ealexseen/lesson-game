@@ -21,6 +21,9 @@ signal join_rejected(_reason: String)
 enum Mode { OFFLINE, HOST, CLIENT, DEDICATED }
 
 const DEFAULT_PORT := 8910
+## Сводка для консоли сервера: первая — почти сразу, дальше раз в минуту.
+const SUMMARY_FIRST := 15.0
+const SUMMARY_INTERVAL := 60.0
 const GAME_SCENE_PATH := "res://core/scenes/map_1/map_1.tscn"
 const MENU_SCENE_PATH := "res://core/scenes/menu/menu.tscn"
 const HANDSHAKE_TIMEOUT := 5.0
@@ -47,6 +50,8 @@ const MAX_DELTA_PACKET_SIZE := 4096
 var mode: Mode = Mode.OFFLINE
 ## Порт текущего соединения: сервер слушает его, клиент на него подключается.
 var port: int = DEFAULT_PORT
+## Первая сводка появляется почти сразу после старта, дальше — раз в минуту.
+var _summary_left: float = SUMMARY_FIRST
 var player_name: String = DEFAULT_NAME
 var lan: LanDiscovery
 ## Сообщение для следующего экрана (например, почему выкинуло из игры).
@@ -158,7 +163,8 @@ func host_game(_name: String, _game_password: String = "", _use_dtls: bool = fal
 	MatchState.clear_participants()
 	MatchState.add_participant(multiplayer.get_unique_id(), player_name)
 	lan.start_broadcasting(player_name, port, _password != "", dtls_on)
-	print("HOST LOCAL ADDRESSES: ", ", ".join(local_addresses()))
+	ServerLog.start()
+	ServerLog.line("HOST LOCAL ADDRESSES: %s" % ", ".join(local_addresses()))
 	server_started.emit()
 	
 	return ""
@@ -198,7 +204,7 @@ func start_dedicated(_settings: Dictionary) -> String:
 	
 	MatchState.clear_participants()
 	lan.start_broadcasting(server_name, port, _password != "", dtls_on)
-	print("SERVER LOCAL ADDRESSES: ", ", ".join(local_addresses()))
+	ServerLog.line("SERVER LOCAL ADDRESSES: %s" % ", ".join(local_addresses()))
 	server_started.emit()
 	
 	return ""
@@ -222,8 +228,16 @@ func _start_dedicated_from_args(_args: Dictionary) -> void:
 	var config_path := str(_args.get("config", ServerConfig.default_path()))
 	var config := ServerConfig.load_or_create(config_path)
 	
+	# журнал настраиваем до первого сообщения, иначе начало уйдёт мимо файла
+	ServerLog.file_enabled = config.get_bool("log_file", true)
+	ServerLog.color_enabled = config.get_bool("color", true)
+	ServerLog.start()
+	
 	if config.created:
-		print("SERVER: создан файл настроек %s — правьте его и перезапускайте" % config_path)
+		ServerLog.line(
+			"SERVER: создан файл настроек %s — правьте его и перезапускайте" % config_path,
+			ServerLog.COLOR_NOTICE
+		)
 	
 	# файл задаёт настройки, аргументы командной строки перекрывают их
 	var settings := {
@@ -238,17 +252,17 @@ func _start_dedicated_from_args(_args: Dictionary) -> void:
 		"dtls": _args.has("dtls") or config.get_bool("dtls", false),
 	}
 	
-	print("SERVER: настройки из %s" % config_path)
+	ServerLog.line("SERVER: настройки из %s" % config_path)
 	
 	var error := start_dedicated(settings)
 	
 	if error != "":
 		push_error(error)
-		print("SERVER FAILED: ", error)
+		ServerLog.line("SERVER FAILED: %s" % error, ServerLog.COLOR_LEAVE)
 		get_tree().quit(1)
 		return
 	
-	print("SERVER READY: порт %d, игроков до %d, автостарт от %d, админ-команды %s, DTLS %s" % [
+	ServerLog.line("SERVER READY: порт %d, игроков до %d, автостарт от %d, админ-команды %s, DTLS %s" % [
 		port, max_clients, _min_players,
 		"включены" if _admin_token != "" else "выключены",
 		"включён" if _dtls_enabled else "выключен"
@@ -265,11 +279,11 @@ func _enable_server_dtls(_peer: ENetMultiplayerPeer, _use_dtls: bool) -> bool:
 	var connection := _peer.get_host()
 	
 	if connection == null or _dtls_key == null or _dtls_certificate == null:
-		print("SERVER: DTLS не включился — нет сертификата или соединения")
+		ServerLog.line("SERVER: DTLS не включился — нет сертификата или соединения", ServerLog.COLOR_NOTICE)
 		return false
 	
 	var error := connection.dtls_server_setup(TLSOptions.server(_dtls_key, _dtls_certificate))
-	print("SERVER: DTLS %s (код %d)" % ["включён" if error == OK else "не включился", error])
+	ServerLog.line("SERVER: DTLS %s (код %d)" % ["включён" if error == OK else "не включился", error])
 	return error == OK
 
 
@@ -404,6 +418,8 @@ func stop_lan_search() -> void:
 
 
 func _process(_delta: float) -> void:
+	_tick_summary(_delta)
+	
 	if _handshake_left <= 0.0:
 		return
 	
@@ -412,6 +428,34 @@ func _process(_delta: float) -> void:
 	if _handshake_left <= 0.0:
 		disconnect_game()
 		connection_failed.emit("Хост не ответил")
+
+
+## Раз в минуту пишем, кто на сервере: консоль — единственный «экран» выделенного сервера.
+func _tick_summary(_delta: float) -> void:
+	if mode != Mode.DEDICATED:
+		return
+	
+	_summary_left -= _delta
+	
+	if _summary_left > 0.0:
+		return
+	
+	_summary_left = SUMMARY_INTERVAL
+	ServerLog.summary(_summary_text())
+
+
+func _summary_text() -> String:
+	var names: Array[String] = []
+	
+	for peer_id in MatchState.participants:
+		var ping := peer_ping(peer_id)
+		names.append("%s%s" % [
+			MatchState.participants[peer_id],
+			"" if ping < 0 else " (%d мс)" % ping,
+		])
+	
+	var players := "никого" if names.is_empty() else ", ".join(names)
+	return "игроков %d: %s" % [MatchState.participants.size(), players]
 
 
 func _close_peer() -> void:
@@ -456,19 +500,33 @@ func _on_peer_connected(_peer_id: int) -> void:
 		return
 	
 	# в список участников игрок попадёт после рукопожатия
-	print_debug("peer connected: ", _peer_id)
+	ServerLog.line("появилось подключение peer %d — ждём рукопожатие" % _peer_id)
 
 
 func _on_peer_disconnected(_peer_id: int) -> void:
 	if not is_hosting():
 		return
 	
+	# имя читаем до удаления из участников, иначе в журнале останется только peer id
+	var was_participant := MatchState.participants.has(_peer_id)
+	var was_in_world := WorldSync.is_peer_in_world(_peer_id)
+	var name := MatchState.participant_name(_peer_id)
+	
 	MatchState.remove_participant(_peer_id)
+	WorldSync.forget_peer(_peer_id)
 	participant_left.emit(_peer_id)
 	_sync_participants()
-	print("SERVER: - peer %d, участников %d" % [
-		_peer_id, MatchState.participants.size()
-	])
+	
+	# у отклонённого подключения (пароль, места) имени нет — писать про него нечего
+	if not was_participant:
+		return
+	
+	if was_in_world:
+		ServerLog.line("%s покинул мир" % name, ServerLog.COLOR_LEAVE)
+	
+	ServerLog.line("SERVER: - %s (peer %d), участников %d" % [
+		name, _peer_id, MatchState.participants.size()
+	], ServerLog.COLOR_LEAVE)
 
 
 func _on_connected_to_server() -> void:
@@ -532,9 +590,9 @@ func _submit_join(_client_name: String, _client_password: String) -> void:
 	
 	MatchState.add_participant(sender, _clean_name(_client_name))
 	_sync_participants()
-	print("SERVER: + %s (peer %d), участников %d" % [
+	ServerLog.line("SERVER: + %s (peer %d), участников %d" % [
 		MatchState.participant_name(sender), sender, MatchState.participants.size()
-	])
+	], ServerLog.COLOR_EVENTS)
 	
 	# выделенному серверу кнопка «начать» недоступна: стартуем сами, когда набралось
 	var started_now := false
@@ -551,7 +609,7 @@ func _submit_join(_client_name: String, _client_password: String) -> void:
 
 
 func _reject(_peer_id: int, _reason: String) -> void:
-	print_debug("reject peer %d: %s" % [_peer_id, _reason])
+	ServerLog.line("SERVER: подключение peer %d отклонено — %s" % [_peer_id, _reason], ServerLog.COLOR_NOTICE)
 	rpc_id(_peer_id, "_notify_rejected", _reason)
 	
 	# даём причине дойти до клиента и лишь затем отключаем
@@ -611,7 +669,7 @@ func _admin_command(_token: String, _command: String, _argument: String) -> void
 		return
 	
 	if _admin_token.is_empty() or _token != _admin_token:
-		print("ADMIN: команда «%s» отклонена — неверный токен" % _command)
+		ServerLog.line("ADMIN: команда «%s» отклонена — неверный токен" % _command, ServerLog.COLOR_NOTICE)
 		return
 	
 	match _command:
@@ -620,11 +678,11 @@ func _admin_command(_token: String, _command: String, _argument: String) -> void
 		ADMIN_STOP:
 			stop_server("остановлен админом")
 		ADMIN_STATUS:
-			print("ADMIN: участников %d — %s" % [
+			ServerLog.line("ADMIN: участников %d — %s" % [
 				MatchState.participants.size(), ", ".join(MatchState.participants.values())
 			])
 		_:
-			print("ADMIN: неизвестная команда «%s»" % _command)
+			ServerLog.line("ADMIN: неизвестная команда «%s»" % _command, ServerLog.COLOR_NOTICE)
 
 
 ## Кик по нику: имя админ видит в списке игроков.
@@ -634,7 +692,7 @@ func kick_by_name(_name: String) -> bool:
 			kick_peer(peer_id, "Кикнут администратором")
 			return true
 	
-	print("ADMIN: игрок «%s» не найден" % _name)
+	ServerLog.line("ADMIN: игрок «%s» не найден" % _name, ServerLog.COLOR_NOTICE)
 	return false
 
 
@@ -642,7 +700,7 @@ func kick_peer(_peer_id: int, _reason: String) -> void:
 	if multiplayer.multiplayer_peer == null or not multiplayer.get_peers().has(_peer_id):
 		return
 	
-	print("ADMIN: кик peer %d (%s)" % [_peer_id, _reason])
+	ServerLog.line("ADMIN: кик %s — %s" % [MatchState.participant_name(_peer_id), _reason], ServerLog.COLOR_LEAVE)
 	rpc_id(_peer_id, "_notify_kicked", _reason)
 	
 	# даём причине дойти до клиента и лишь затем отключаем
@@ -654,8 +712,9 @@ func kick_peer(_peer_id: int, _reason: String) -> void:
 
 ## Остановка сервера: гасим игру и выходим из процесса.
 func stop_server(_reason: String) -> void:
-	print("SERVER STOPPED: %s" % _reason)
+	ServerLog.line("SERVER STOPPED: %s" % _reason, ServerLog.COLOR_NOTICE)
 	disconnect_game()
+	ServerLog.stop()
 	get_tree().quit(0)
 
 
@@ -680,7 +739,7 @@ func start_game() -> void:
 	if not is_hosting():
 		return
 	
-	print("GAME STARTED: участников %d" % MatchState.participants.size())
+	ServerLog.line("GAME STARTED: участников %d" % MatchState.participants.size(), ServerLog.COLOR_EVENTS)
 	_game_started = true
 	rpc("_load_game_scene")
 	_load_game_scene()

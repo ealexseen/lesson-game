@@ -207,7 +207,7 @@ $exportLog = Join-Path $userDir 'build-export.log'
 
 if ($DryRun) {
 	Write-Host "   [dry-run] & `"$Godot`" --headless --path . --export-release `"Windows Desktop`" `"$exePath`""
-	Write-Host '   [dry-run] would copy: tools\server\run_server.bat'
+	Write-Host '   [dry-run] would copy: tools\server\run_server.bat, run_server.ps1 and watch_log.bat'
 	Write-Host '   [dry-run] would write: server.cfg (template from the game code)'
 } else {
 	New-Item -ItemType Directory -Force $buildDir | Out-Null
@@ -234,13 +234,26 @@ if ($DryRun) {
 		Write-Host "   vs v.0.0.$last, exe diff: $diff bytes"
 	}
 	
-	# --- 6. Server launcher and config: a double click starts a dedicated server,
-	# and server.cfg next to the game shows what can be tuned.
-	Write-Step 'server launcher and config'
-	$launcher = Join-Path $root 'tools\server\run_server.bat'
-	if (-not (Test-Path $launcher)) { throw "server launcher not found: $launcher" }
-	Copy-Item $launcher (Join-Path $buildDir 'run_server.bat') -Force
-	Write-Host '   run_server.bat'
+	# --- 6. Server launchers and config: a double click starts a dedicated server,
+	# watch_log.bat shows the journal, and server.cfg next to the game shows what can be tuned.
+	Write-Step 'server launchers and config'
+	$launchers = @('run_server.bat', 'run_server.ps1', 'watch_log.bat')
+	
+	# cmd and Windows PowerShell 5.1 both break on non-ASCII launcher files:
+	# 5.1 reads BOM-less files as ANSI and the parse dies on Cyrillic
+	foreach ($name in $launchers) {
+		$bytes = [System.IO.File]::ReadAllBytes((Join-Path $root "tools\server\$name"))
+		$bad = @($bytes | Where-Object { $_ -gt 127 })
+		
+		if ($bad.Count -gt 0) { throw "launcher $name must stay pure ASCII: $($bad.Count) non-ASCII bytes" }
+	}
+	
+	foreach ($name in $launchers) {
+		$source = Join-Path $root "tools\server\$name"
+		if (-not (Test-Path $source)) { throw "server launcher not found: $source" }
+		Copy-Item $source (Join-Path $buildDir $name) -Force
+		Write-Host "   $name"
+	}
 	
 	# Шаблон берём из кода (ServerConfig.TEMPLATE), чтобы не держать вторую копию
 	$configPath = Join-Path $buildDir 'server.cfg'
@@ -258,7 +271,7 @@ if ($DryRun) {
 		
 		Push-Location $buildDir
 		try {
-			$rarCode = Invoke-Native $rarBin @('a', '-ep1', '-m5', "$versionName.rar", 'LessonGame.exe', 'LessonGame.console.exe', 'LessonGame.pck', 'run_server.bat', 'server.cfg')
+			$rarCode = Invoke-Native $rarBin @('a', '-ep1', '-m5', "$versionName.rar", 'LessonGame.exe', 'LessonGame.console.exe', 'LessonGame.pck', 'run_server.bat', 'run_server.ps1', 'watch_log.bat', 'server.cfg')
 			if ($rarCode -ne 0) { throw "Rar.exe returned exit=$rarCode" }
 		} finally {
 			Pop-Location

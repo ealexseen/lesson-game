@@ -201,14 +201,18 @@ func _server_tick(_delta: float) -> void:
 ## Владелец может разойтись с нами — из-за потерь ввода или потому, что соврал.
 ## Его присланная позиция на истину не влияет, но расхождение видно в логе сервера.
 func _report_divergence() -> void:
+	# игрок уже вышел или ввода давно нет: сравнивать не с чем, это не расхождение
+	if not MatchState.participants.has(peer_id) or _last_input_at <= 0.0 or _silent_too_long():
+		return
+	
 	var divergence := position.distance_to(_reported_position)
 	
 	if divergence < RECONCILE_ERROR:
 		return
 	
-	print("SERVER: расхождение с %s — %.0f px (наша позиция %s)" % [
+	ServerLog.line("SERVER: расхождение с %s — %.0f px (наша позиция %s)" % [
 		MatchState.participant_name(peer_id), divergence, position
-	])
+	], ServerLog.COLOR_NOTICE)
 
 
 func _silent_too_long() -> bool:

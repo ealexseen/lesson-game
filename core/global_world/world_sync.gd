@@ -384,9 +384,16 @@ func _request_snapshot() -> void:
 	
 	var sender := multiplayer.get_remote_sender_id()
 	_peers_in_world[sender] = true
+	ServerLog.line("%s вошёл в мир" % MatchState.participant_name(sender), ServerLog.COLOR_EVENTS)
 	peer_entered_world.emit(sender)
 	rpc("_peer_in_world_remote", sender)
 	rpc_id(sender, "_apply_snapshot", snapshot())
+
+
+## Пир ушёл: забываем его, чтобы видимость движения не считала его на карте.
+func forget_peer(_peer_id: int) -> void:
+	_peers_in_world.erase(_peer_id)
+	_visible_cache.clear()
 
 
 @rpc("authority", "call_remote", "reliable")

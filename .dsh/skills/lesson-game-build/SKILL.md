@@ -15,9 +15,10 @@ whenToUse: Use when asked to build a new LessonGame version ("собери би�
 | `LessonGame.exe` | 99.71 МБ (это шаблон `windows_release_x86_64.exe` плюс иконка) |
 | `LessonGame.console.exe` | 0.16 МБ (обёртка с консолью, `debug/export_console_wrapper=2`) |
 | `LessonGame.pck` | ~6 МБ (`binary_format/embed_pck=false`) |
-| `run_server.bat` | ~1 КБ, копируется из `tools/server/` — запуск выделенного сервера двойным кликом |
+| `run_server.bat` + `run_server.ps1` | ~1 КБ каждый, из `tools/server/` — запуск выделенного сервера двойным кликом; окно транслирует журнал (`.ps1`), потому что консольная обёртка Godot не показывает вывод игры в настоящей консоли |
+| `watch_log.bat` | ~1 КБ, оттуда же — второе окно с журналом, если основное закрыто или замерло |
 | `server.cfg` | ~1 КБ, шаблон настроек сервера: генерируется из `ServerConfig.TEMPLATE` скриптом `core/dev_checks/write_server_config.gd`, чтобы не держать вторую копию шаблона |
-| `v.0.0.N.rar` | ~32 МБ (те же пять файлов в корне архива) |
+| `v.0.0.N.rar` | ~32 МБ (те же семь файлов в корне архива) |
 
 `build/` в `.gitignore` — в гите живёт только `export_presets.cfg`, поэтому номер версии фиксируется коммитом этого файла.
 
@@ -52,7 +53,7 @@ New-Item -ItemType Directory -Force 'build\v.0.0.N' | Out-Null
 
 ```powershell
 Push-Location 'build\v.0.0.N'
-& 'C:\Program Files\WinRAR\Rar.exe' a -ep1 -m5 'v.0.0.N.rar' 'LessonGame.exe' 'LessonGame.console.exe' 'LessonGame.pck' 'run_server.bat' 'server.cfg'
+& 'C:\Program Files\WinRAR\Rar.exe' a -ep1 -m5 'v.0.0.N.rar' 'LessonGame.exe' 'LessonGame.console.exe' 'LessonGame.pck' 'run_server.bat' 'run_server.ps1' 'watch_log.bat' 'server.cfg'
 Pop-Location
 & 'C:\Program Files\WinRAR\Rar.exe' l 'build\v.0.0.N\v.0.0.N.rar'   # сверка содержимого
 ```

@@ -19,6 +19,7 @@ run/main_scene="uid://bisimkg8iptx"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 boot_splash/image="uid://6wdwn3iq680"
 config/icon="uid://6wdwn3iq680"
+run/flush_stdout_on_print=true
 
 [autoload]
 
