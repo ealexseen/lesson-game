@@ -18,6 +18,8 @@ var players: Dictionary[int, Player] = {}
 # участники матча из лобби: peer_id -> имя (игроки в мире появятся на этапе M2)
 var participants: Dictionary[int, String] = {}
 var is_host: bool = true
+# сервер выделенный: за его машиной нет игрока, поэтому «хоста» в списке нет
+var is_dedicated_server: bool = false
 
 
 func is_networked() -> bool:

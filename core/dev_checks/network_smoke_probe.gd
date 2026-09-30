@@ -35,6 +35,8 @@ const HARD_TIMEOUT := 60.0
 const STRESS_HOLD := 25.0
 const BOT_STEP := 5.0
 const REPORT_DIR := "res://_dsh_reports/"
+const ADMIN_DELAY := 3.0
+const ADMIN_QUIT_DELAY := 2.0
 
 # тайминги мира: считаются от момента, когда карта загрузилась
 const BREAK_DELAY := 6.0
@@ -84,6 +86,9 @@ var _host_used := false
 var _host_use_released := false
 var _use_checked := false
 var _spawn_reported := {}
+var _admin_sent := false
+var _admin_sent_at := 0.0
+var _expect_kick := false
 
 
 func _ready() -> void:
@@ -93,6 +98,7 @@ func _ready() -> void:
 	
 	print("SMOKE ARGS: ", _args)
 	_expect_reject = _args.has("expect-reject")
+	_expect_kick = _args.has("expect-kick")
 	
 	if _args.has("watch-peer"):
 		_watch_peer = int(_args["watch-peer"])
@@ -244,9 +250,15 @@ func _write_report(_code: int, _message: String) -> void:
 	if file == null:
 		return
 	
+	# пира может уже не быть: отчёт пишется и после отключения
+	var peers := 0
+	
+	if multiplayer.multiplayer_peer != null:
+		peers = multiplayer.get_peers().size()
+	
 	file.store_line("%s | exit=%d players=%d peers=%d scene=%s %s" % [
 		_message, _code, MatchState.player_count(),
-		multiplayer.get_peers().size(), _current_scene_path(), _net_report()
+		peers, _current_scene_path(), _net_report()
 	])
 	file.close()
 
@@ -469,6 +481,11 @@ func _break_tree() -> void:
 # Клиент
 
 func _tick_client() -> void:
+	# админ-клиент: подключается, шлёт одну команду серверу и уходит
+	if _args.has("admin-kick") or _args.has("admin-stop") or _args.has("admin-status"):
+		_tick_admin()
+		return
+	
 	if not _args.has("expect-game") and not _args.has("bot"):
 		return
 	
@@ -605,10 +622,37 @@ func _remember_tree() -> void:
 
 
 ## Бот для стресса: ходит влево-вправо и в конце отчитывается о трафике.
+## Админ-клиент: даём остальным подключиться и отправляем одну команду серверу.
+func _tick_admin() -> void:
+	if not _admin_sent:
+		if _elapsed < ADMIN_DELAY:
+			return
+		
+		_admin_sent = true
+		_admin_sent_at = _elapsed
+		var token := str(_args.get("admin-token", ""))
+		
+		if _args.has("admin-kick"):
+			NetworkManager.send_admin_command(token, "kick", str(_args["admin-kick"]))
+			print("SMOKE ADMIN KICK: %s" % _args["admin-kick"])
+		elif _args.has("admin-stop"):
+			NetworkManager.send_admin_command(token, "stop")
+			print("SMOKE ADMIN STOP")
+		else:
+			NetworkManager.send_admin_command(token, "status")
+			print("SMOKE ADMIN STATUS")
+		return
+	
+	if _elapsed - _admin_sent_at >= ADMIN_QUIT_DELAY:
+		_finish(0, "SMOKE ADMIN OK")
+
+
 func _tick_bot() -> void:
 	if not _client_checked:
 		_client_checked = true
-		print("SMOKE BOT READY players=%d" % MatchState.player_count())
+		print("SMOKE BOT READY players=%d dedicated=%s" % [
+			MatchState.player_count(), MatchState.is_dedicated_server
+		])
 	
 	var phase := int(_elapsed / BOT_STEP) % 2
 	
@@ -803,6 +847,11 @@ func _find_shared_item() -> Node:
 # Сигналы
 
 func _on_connection_succeeded() -> void:
+	# админ-клиенту сцена не нужна: он только отправляет команду
+	if _args.has("admin-kick") or _args.has("admin-stop") or _args.has("admin-status"):
+		print("SMOKE ADMIN CONNECTED")
+		return
+	
 	if _args.has("expect-game") or _args.has("bot"):
 		print("SMOKE CLIENT CONNECTED")
 		return
@@ -815,6 +864,10 @@ func _on_connection_succeeded() -> void:
 
 
 func _on_join_rejected(_reason: String) -> void:
+	if _expect_kick:
+		_finish(0, "SMOKE CLIENT KICKED OK: %s" % _reason)
+		return
+	
 	if _expect_reject:
 		_finish(0, "SMOKE CLIENT REJECTED: %s" % _reason)
 		return
@@ -823,6 +876,11 @@ func _on_join_rejected(_reason: String) -> void:
 
 
 func _on_failed(_reason: String) -> void:
+	# сервер остановлен по админ-команде — это и был сценарий
+	if _admin_sent and _args.has("admin-stop"):
+		_finish(0, "SMOKE ADMIN STOP OK")
+		return
+	
 	# даём кадру перейти в меню, если хост ушёл во время игры
 	_fail_reason = _reason
 	_fail_at = _elapsed + 0.6

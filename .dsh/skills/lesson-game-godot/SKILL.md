@@ -72,15 +72,19 @@ $env:APPDATA = Join-Path (Get-Location) '.dsh_user'   # иначе движок 
 
 ```powershell
 # сервер (без окна, без игрока за машиной), аргументы после --
-& $godot --headless --path . -- --server [--min-players=2] [--password=secret] [--name=MyServer]
+& $godot --headless --path . -- --server [--min-players=2] [--password=secret] [--name=MyServer] [--admin-token=secret]
 
 # проверка: два бота подключаются и играют
 & $godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --name=Bot1 --bot --hold=12
+
+# админ-команды (клиенту не нужно быть игроком, достаточно токена)
+& $godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --name=Admin --admin-token=secret --admin-kick=Bot1
+& $godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --name=Admin --admin-token=secret --admin-stop
 ```
 
-Успех: сервер печатает `SERVER READY: порт 8910, игроков до 20, автостарт от N` и `GAME STARTED: участников N`; боты — `SMOKE BOT DONE` с `players=N` (сервер в число игроков не входит) и `scene=map_1.tscn`.
+Успех: сервер печатает `SERVER READY: порт 8910, игроков до 20, автостарт от N, админ-команды включены|выключены` и `GAME STARTED: участников N`; боты — `SMOKE BOT DONE` с `players=N` (сервер в число игроков не входит), `dedicated=true` и `scene=map_1.tscn`. Кикнутый бот (`--expect-kick`) пишет `SMOKE CLIENT KICKED OK: <причина>`; после `--admin-stop` сервер печатает `SERVER STOPPED` и процесс завершается.
 
-Сервер не завершается сам: в фоновом прогоне его нужно останавливать (`Stop-Process`), иначе он держит порт 8910. stdout под `Start-Process` буферизуется — ошибки читайте из stderr, итог — из отчётов ботов (`--report`).
+Сервер не завершается сам: в фоновом прогоне его нужно останавливать (`Stop-Process`), иначе он держит порт 8910. stdout под `Start-Process` буферизуется — ошибки читайте из stderr, итог — из отчётов (`--report`). Развёртывание (systemd/docker/файрвол) — §12 в `docs/multiplayer_plan.md`.
 
 ## Справка по API Godot 4.6 (Context7)
 

@@ -30,6 +30,12 @@ func _process(_delta: float) -> void:
 func refresh() -> void:
 	clear()
 	
+	# на выделенном сервере «хоста» среди участников нет — поясняем это строкой
+	if MatchState.is_dedicated_server:
+		add_item("Выделенный сервер — игроков %d" % MatchState.participants.size())
+		set_item_selectable(item_count - 1, false)
+		set_item_custom_fg_color(item_count - 1, Color(0.7, 0.7, 0.7))
+	
 	var ids := MatchState.participants.keys()
 	ids.sort()
 	

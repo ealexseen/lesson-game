@@ -41,6 +41,32 @@ function Write-Step([string]$text) {
 	Write-Host "== $text" -ForegroundColor Cyan
 }
 
+## Runs a native command and returns its exit code.
+## Needed because PowerShell 5.1 turns native stderr into a terminating error while
+## $ErrorActionPreference is 'Stop'. Godot always writes one harmless line to stderr
+## ("Failed to read the root certificate store"), which killed the script at the load
+## gate before this helper existed. The exit code stays the source of truth.
+## $LogFile collects stdout and stderr of the command, as the old inline redirection did.
+function Invoke-Native {
+	param([string]$File, [string[]]$Arguments, [string]$LogFile)
+	
+	$previous = $ErrorActionPreference
+	$ErrorActionPreference = 'Continue'
+	try {
+		if ($LogFile) {
+			& $File @Arguments *> $LogFile
+		} else {
+			# Discard stdout and stderr: otherwise the command's own output merges into
+			# this function's return value and the exit code comes back as text.
+			& $File @Arguments 2>&1 | Out-Null
+		}
+		$code = $LASTEXITCODE
+	} finally {
+		$ErrorActionPreference = $previous
+	}
+	return $code
+}
+
 function Get-FirewallRuleStore {
 	$key = 'HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules'
 	return @((Get-ItemProperty $key -ErrorAction SilentlyContinue).PSObject.Properties | Where-Object { $_.Name -notlike 'PS*' })
@@ -116,8 +142,8 @@ if ($DryRun) {
 	Write-Host "   [dry-run] & `"$Godot`" --headless --path . --quit"
 } else {
 	$env:APPDATA = $userDir
-	& $Godot --headless --path . --quit *> $gateLog
-	if ($LASTEXITCODE -ne 0) { throw "gate failed: exit=$LASTEXITCODE, see $gateLog" }
+	$gateCode = Invoke-Native $Godot @('--headless', '--path', '.', '--quit') -LogFile $gateLog
+	if ($gateCode -ne 0) { throw "gate failed: exit=$gateCode, see $gateLog" }
 	Write-Host '   exit=0'
 }
 
@@ -184,9 +210,9 @@ if ($DryRun) {
 } else {
 	New-Item -ItemType Directory -Force $buildDir | Out-Null
 	$env:APPDATA = $userDir
-	& $Godot --headless --path . --export-release 'Windows Desktop' $exePath *> $exportLog
+	$exportCode = Invoke-Native $Godot @('--headless', '--path', '.', '--export-release', 'Windows Desktop', $exePath) -LogFile $exportLog
 	
-	if ($LASTEXITCODE -ne 0) { throw "export failed: exit=$LASTEXITCODE, see $exportLog" }
+	if ($exportCode -ne 0) { throw "export failed: exit=$exportCode, see $exportLog" }
 	Write-Host '   exit=0'
 	
 	# --- 5. Sizes: a quick signal that the export produced the right thing
@@ -213,8 +239,8 @@ if ($DryRun) {
 		
 		Push-Location $buildDir
 		try {
-			& $rarBin a -ep1 -m5 "$versionName.rar" 'LessonGame.exe' 'LessonGame.console.exe' 'LessonGame.pck' | Out-Null
-			if ($LASTEXITCODE -ne 0) { throw "Rar.exe returned exit=$LASTEXITCODE" }
+			$rarCode = Invoke-Native $rarBin @('a', '-ep1', '-m5', "$versionName.rar", 'LessonGame.exe', 'LessonGame.console.exe', 'LessonGame.pck')
+			if ($rarCode -ne 0) { throw "Rar.exe returned exit=$rarCode" }
 		} finally {
 			Pop-Location
 		}
@@ -227,11 +253,16 @@ if ($DryRun) {
 	if (-not $SkipSmoke) {
 		Write-Step 'smoke run'
 		$runLog = Join-Path $userDir 'build-run.log'
-		& (Join-Path $buildDir 'LessonGame.console.exe') --headless --quit *> $runLog
-		$runCode = $LASTEXITCODE
+		$runCode = Invoke-Native (Join-Path $buildDir 'LessonGame.console.exe') @('--headless', '--quit') -LogFile $runLog
+		# Godot writes its harmless cert-store line to stderr, and PowerShell 5.1 turns
+		# native stderr into an ErrorRecord whose formatted text lands in the log:
+		# source location lines, 'CategoryInfo' and 'FullyQualifiedErrorId'. Those carry
+		# the word ERROR and used to be reported as real ones, so they are filtered out.
+		# Engine errors are unaffected: in a log they look like 'SCRIPT ERROR: ...'.
+		$errorNoise = '^\s*(?:[+-]\s|At\s+line|At\s+[A-Za-z]:|CategoryInfo\s|FullyQualifiedErrorId\s)'
 		$realErrors = @(
 			Select-String -Path $runLog -Pattern 'ERROR|SCRIPT ERROR' -ErrorAction SilentlyContinue |
-				Where-Object { $_.Line -notmatch $allowedError }
+				Where-Object { $_.Line -notmatch $allowedError -and $_.Line -notmatch $errorNoise }
 		)
 		
 		if ($runCode -ne 0) { throw "exported game did not start: exit=$runCode, see $runLog" }

@@ -29,6 +29,16 @@ const DEDICATED_NAME := "Выделенный сервер"
 # пауза перед отключением отклонённого клиента, чтобы причина успела дойти
 const REJECT_GRACE := 0.4
 
+# лимиты сервера: 0 у ENet значило бы «без предела»
+const SERVER_CHANNELS := 2
+const PEER_IN_BANDWIDTH := 32768 # байт/с от пира; наш замер — около 0,6 КБ/с
+const PEER_OUT_BANDWIDTH := 32768 # байт/с пиру; наш замер — около 10 КБ/с
+
+# админ-команды выделенного сервера
+const ADMIN_KICK := "kick"
+const ADMIN_STOP := "stop"
+const ADMIN_STATUS := "status"
+
 var mode: Mode = Mode.OFFLINE
 var player_name: String = DEFAULT_NAME
 var lan: LanDiscovery
@@ -47,6 +57,8 @@ var _game_started: bool = false
 var _handshake_left: float = 0.0
 # выделенный сервер: сколько игроков ждать до автостарта
 var _min_players: int = 1
+# токен админ-команд: пустой — команды выключены
+var _admin_token: String = ""
 
 
 func _ready() -> void:
@@ -111,7 +123,9 @@ func host_game(_name: String, _game_password: String = "") -> String:
 	
 	max_clients = MatchState.MAX_PLAYERS - 1
 	var peer := ENetMultiplayerPeer.new()
-	var error := peer.create_server(DEFAULT_PORT, max_clients)
+	var error := peer.create_server(
+		DEFAULT_PORT, max_clients, SERVER_CHANNELS, PEER_IN_BANDWIDTH, PEER_OUT_BANDWIDTH
+	)
 	
 	if error != OK:
 		return _host_error_text(error)
@@ -137,20 +151,24 @@ func host_game(_name: String, _game_password: String = "") -> String:
 func start_dedicated(
 	_game_password: String = "",
 	_min_players_count: int = 1,
-	_server_name: String = DEDICATED_NAME
+	_server_name: String = DEDICATED_NAME,
+	_token: String = ""
 ) -> String:
 	disconnect_game()
 	
 	# на выделенном сервере хост не занимает место: входят все MAX_PLAYERS
 	max_clients = MatchState.MAX_PLAYERS
 	var peer := ENetMultiplayerPeer.new()
-	var error := peer.create_server(DEFAULT_PORT, max_clients)
+	var error := peer.create_server(
+		DEFAULT_PORT, max_clients, SERVER_CHANNELS, PEER_IN_BANDWIDTH, PEER_OUT_BANDWIDTH
+	)
 	
 	if error != OK:
 		return _host_error_text(error)
 	
 	_password = _game_password
 	_min_players = maxi(1, _min_players_count)
+	_admin_token = _token
 	mode = Mode.DEDICATED
 	# игрока-хозяина нет, поэтому «хостом» не помечается никто
 	MatchState.is_host = false
@@ -182,7 +200,8 @@ func _start_dedicated_from_args(_args: Dictionary) -> void:
 	var error := start_dedicated(
 		str(_args.get("password", "")),
 		int(_args.get("min-players", "1")),
-		str(_args.get("name", DEDICATED_NAME))
+		str(_args.get("name", DEDICATED_NAME)),
+		str(_args.get("admin-token", ""))
 	)
 	
 	if error != "":
@@ -191,8 +210,8 @@ func _start_dedicated_from_args(_args: Dictionary) -> void:
 		get_tree().quit(1)
 		return
 	
-	print("SERVER READY: порт %d, игроков до %d, автостарт от %d" % [
-		DEFAULT_PORT, max_clients, _min_players
+	print("SERVER READY: порт %d, игроков до %d, автостарт от %d, админ-команды %s" % [
+		DEFAULT_PORT, max_clients, _min_players, "включены" if _admin_token != "" else "выключены"
 	])
 ## Адреса, по которым до этой машины могут дотянуться другие: без loopback и
 ## автоконфигурации, только IPv4 (ENet в проекте ходит по IPv4).
@@ -322,6 +341,9 @@ func _on_peer_disconnected(_peer_id: int) -> void:
 	MatchState.remove_participant(_peer_id)
 	participant_left.emit(_peer_id)
 	_sync_participants()
+	print("SERVER: - peer %d, участников %d" % [
+		_peer_id, MatchState.participants.size()
+	])
 
 
 func _on_connected_to_server() -> void:
@@ -385,6 +407,9 @@ func _submit_join(_client_name: String, _client_password: String) -> void:
 	
 	MatchState.add_participant(sender, _clean_name(_client_name))
 	_sync_participants()
+	print("SERVER: + %s (peer %d), участников %d" % [
+		MatchState.participant_name(sender), sender, MatchState.participants.size()
+	])
 	
 	# выделенному серверу кнопка «начать» недоступна: стартуем сами, когда набралось
 	var started_now := false
@@ -423,23 +448,104 @@ func _notify_rejected(_reason: String) -> void:
 
 func _sync_participants() -> void:
 	var list := MatchState.get_participants()
-	_receive_participants(list)
-	rpc("_receive_participants", list)
+	_receive_participants(list, is_dedicated())
+	rpc("_receive_participants", list, is_dedicated())
 
 
 @rpc("authority", "call_remote", "reliable")
-func _receive_participants(_list: Dictionary) -> void:
+func _receive_participants(_list: Dictionary, _dedicated: bool = false) -> void:
 	var converted: Dictionary[int, String] = {}
 	
 	for peer_id in _list:
 		converted[int(peer_id)] = str(_list[peer_id])
 	
+	MatchState.is_dedicated_server = _dedicated
 	MatchState.set_participants(converted)
 	
 	if mode == Mode.CLIENT and not _accepted:
 		_accepted = true
 		_handshake_left = 0.0
 		connection_succeeded.emit()
+
+
+# Админ-команды выделенного сервера
+
+## Отправить админ-команду серверу (консоль, утилита, смоук).
+func send_admin_command(_token: String, _command: String, _argument: String = "") -> bool:
+	if mode != Mode.CLIENT:
+		return false
+	
+	rpc_id(1, "_admin_command", _token, _command, _argument)
+	return true
+
+
+## Команду принимает только сервер и только с верным токеном.
+@rpc("any_peer", "call_remote", "reliable")
+func _admin_command(_token: String, _command: String, _argument: String) -> void:
+	if not is_hosting():
+		return
+	
+	if _admin_token.is_empty() or _token != _admin_token:
+		print("ADMIN: команда «%s» отклонена — неверный токен" % _command)
+		return
+	
+	match _command:
+		ADMIN_KICK:
+			kick_by_name(_argument)
+		ADMIN_STOP:
+			stop_server("остановлен админом")
+		ADMIN_STATUS:
+			print("ADMIN: участников %d — %s" % [
+				MatchState.participants.size(), ", ".join(MatchState.participants.values())
+			])
+		_:
+			print("ADMIN: неизвестная команда «%s»" % _command)
+
+
+## Кик по нику: имя админ видит в списке игроков.
+func kick_by_name(_name: String) -> bool:
+	for peer_id in MatchState.participants:
+		if MatchState.participants[peer_id] == _name:
+			kick_peer(peer_id, "Кикнут администратором")
+			return true
+	
+	print("ADMIN: игрок «%s» не найден" % _name)
+	return false
+
+
+func kick_peer(_peer_id: int, _reason: String) -> void:
+	if multiplayer.multiplayer_peer == null or not multiplayer.get_peers().has(_peer_id):
+		return
+	
+	print("ADMIN: кик peer %d (%s)" % [_peer_id, _reason])
+	rpc_id(_peer_id, "_notify_kicked", _reason)
+	
+	# даём причине дойти до клиента и лишь затем отключаем
+	await get_tree().create_timer(REJECT_GRACE).timeout
+	
+	if multiplayer.multiplayer_peer != null and multiplayer.get_peers().has(_peer_id):
+		multiplayer.multiplayer_peer.disconnect_peer(_peer_id)
+
+
+## Остановка сервера: гасим игру и выходим из процесса.
+func stop_server(_reason: String) -> void:
+	print("SERVER STOPPED: %s" % _reason)
+	disconnect_game()
+	get_tree().quit(0)
+
+
+@rpc("authority", "call_remote", "reliable")
+func _notify_kicked(_reason: String) -> void:
+	if mode != Mode.CLIENT:
+		return
+	
+	var in_game := _in_game_scene()
+	last_notice = _reason
+	disconnect_game()
+	join_rejected.emit(_reason)
+	
+	if in_game:
+		get_tree().change_scene_to_file(MENU_SCENE_PATH)
 
 
 # Начало игры
