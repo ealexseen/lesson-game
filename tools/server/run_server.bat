@@ -16,7 +16,7 @@ if not exist "LessonGame.console.exe" (
 )
 
 echo Starting LessonGame dedicated server...
-echo Settings: server.cfg in this folder ^(created on first run with hints inside^).
+echo Settings: server.cfg next to this file ^(hints are inside^).
 echo Stop: Ctrl+C in this window.
 echo.
 

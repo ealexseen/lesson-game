@@ -208,6 +208,7 @@ $exportLog = Join-Path $userDir 'build-export.log'
 if ($DryRun) {
 	Write-Host "   [dry-run] & `"$Godot`" --headless --path . --export-release `"Windows Desktop`" `"$exePath`""
 	Write-Host '   [dry-run] would copy: tools\server\run_server.bat'
+	Write-Host '   [dry-run] would write: server.cfg (template from the game code)'
 } else {
 	New-Item -ItemType Directory -Force $buildDir | Out-Null
 	$env:APPDATA = $userDir
@@ -233,12 +234,22 @@ if ($DryRun) {
 		Write-Host "   vs v.0.0.$last, exe diff: $diff bytes"
 	}
 	
-	# --- 6. Server launcher: lets a dedicated server be started by a double click
-	Write-Step 'server launcher'
+	# --- 6. Server launcher and config: a double click starts a dedicated server,
+	# and server.cfg next to the game shows what can be tuned.
+	Write-Step 'server launcher and config'
 	$launcher = Join-Path $root 'tools\server\run_server.bat'
 	if (-not (Test-Path $launcher)) { throw "server launcher not found: $launcher" }
 	Copy-Item $launcher (Join-Path $buildDir 'run_server.bat') -Force
-	Write-Host '   run_server.bat (server.cfg is created next to the game on first run)'
+	Write-Host '   run_server.bat'
+	
+	# Шаблон берём из кода (ServerConfig.TEMPLATE), чтобы не держать вторую копию
+	$configPath = Join-Path $buildDir 'server.cfg'
+	$configLog = Join-Path $userDir 'build-server-config.log'
+	$configCode = Invoke-Native $Godot @('--headless', '--path', '.', '--script', 'res://core/dev_checks/write_server_config.gd', '--', $configPath) -LogFile $configLog
+	
+	if ($configCode -ne 0) { throw "server.cfg generation failed: exit=$configCode, see $configLog" }
+	if (-not (Test-Path $configPath)) { throw "server.cfg was not created in $buildDir" }
+	Write-Host '   server.cfg (template from the game code)'
 	
 	# --- 7. Archive
 	if (-not $NoRar) {
@@ -247,7 +258,7 @@ if ($DryRun) {
 		
 		Push-Location $buildDir
 		try {
-			$rarCode = Invoke-Native $rarBin @('a', '-ep1', '-m5', "$versionName.rar", 'LessonGame.exe', 'LessonGame.console.exe', 'LessonGame.pck', 'run_server.bat')
+			$rarCode = Invoke-Native $rarBin @('a', '-ep1', '-m5', "$versionName.rar", 'LessonGame.exe', 'LessonGame.console.exe', 'LessonGame.pck', 'run_server.bat', 'server.cfg')
 			if ($rarCode -ne 0) { throw "Rar.exe returned exit=$rarCode" }
 		} finally {
 			Pop-Location
