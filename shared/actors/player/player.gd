@@ -25,6 +25,7 @@ const RECONCILE_IGNORE := 4.0 # мельче этого расхождение �
 const REPLAY_LIMIT := 120 # сколько кадров истории держим (около 2 с)
 const INPUT_TIMEOUT := 0.5 # молчание владельца считаем нулевым вводом
 const RECONCILE_ERROR := 32.0 # с такого расхождения пишем в лог сервера
+const TELEPORT_GRACE := 0.4 # столько владелец не слушает поправки после переноса
 
 @onready var equippable_item_holder: EquippableItemHolder = %EquippableItemHolder
 @onready var camera: Camera2D = $Camera2D
@@ -50,6 +51,7 @@ var _last_input_at := 0.0 # сервер: когда пришёл последн
 var _reported_position := Vector2.ZERO # сервер: что владелец считает своим местом
 var _history: Array[Dictionary] = [] # владелец: кадры для пересчёта
 var _pending_reconcile: Dictionary = {}
+var _teleport_grace_left := 0.0 # окно, в котором поправки движения игнорируются
 
 # Получаем гравитацию из проекта
 var gravity: float = ProjectSettings.get_setting('physics/2d/default_gravity')
@@ -132,7 +134,10 @@ func _physics_process(_delta: float) -> void:
 # Владелец: предсказание своего движения
 
 func _owner_tick(_delta: float) -> void:
-	_apply_pending_reconcile(_delta)
+	if _teleport_grace_left > 0.0:
+		_teleport_grace_left -= _delta
+	else:
+		_apply_pending_reconcile(_delta)
 	
 	input_axis = Input.get_axis("left", "right")
 	input_jump = Input.is_action_just_pressed("jump")
@@ -234,7 +239,41 @@ func apply_remote_input(_seq: int, _axis: float, _jump: bool, _position: Vector2
 
 ## Владелец получил поправку: запоминаем и применим в начале следующего кадра.
 func reconcile(_seq: int, _position: Vector2) -> void:
+	# сразу после своего переноса поправка ещё описывает старое место — она не нужна
+	if _teleport_grace_left > 0.0:
+		return
+	
 	_pending_reconcile = {"seq": _seq, "position": _position}
+
+
+## Перенос игрока: дверь, способность телепорта, возврат после падения с карты.
+## Об этом должен узнать сервер, иначе его поправка вернёт игрока на прежнее место.
+func teleport(_position: Vector2) -> void:
+	if not is_local() and not WorldSync.is_server():
+		# чужим игроком распоряжается сервер, у себя его двигать нельзя
+		return
+	
+	position = _position
+	velocity = Vector2.ZERO
+	# история и незакрытые поправки относятся к прежнему месту
+	_history.clear()
+	_pending_reconcile.clear()
+	_reported_position = position
+	_teleport_grace_left = TELEPORT_GRACE
+	
+	if is_local() and not WorldSync.is_server():
+		WorldSync.send_teleport(position)
+		return
+	
+	net_target.position = position
+
+
+## Сервер применил перенос, о котором попросил владелец.
+func apply_remote_teleport(_position: Vector2) -> void:
+	teleport(_position)
+	ServerLog.line("SERVER: %s перенесён в %s" % [
+		MatchState.participant_name(peer_id), _position
+	])
 
 
 func _apply_pending_reconcile(_delta: float) -> void:
@@ -310,7 +349,7 @@ func check_walking_energy_change(_delta: float) -> void:
 
 func save_player() -> void:
 	if position.y >= 2500 and spawn:
-		position = spawn.position
+		teleport(spawn.position)
 
 
 func move(_delta: float) -> void:

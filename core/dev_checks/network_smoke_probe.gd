@@ -668,15 +668,20 @@ func _tick_bot() -> void:
 		Input.action_release("right")
 		Input.action_press("left" if phase == 0 else "right")
 	
-	if _args.has("teleport") and not _teleported and _elapsed >= TELEPORT_DELAY:
+	if (_args.has("teleport") or _args.has("teleport-legit")) and not _teleported and _elapsed >= TELEPORT_DELAY:
 		_teleported = true
 		_teleport_before = MatchState.local_player.position
-		# подделка: клиент двигает себя сам, сервер об этом не просил
-		MatchState.local_player.position += TELEPORT_DELTA
+		# --teleport: подделка (сырая запись позиции, сервер о ней не знает)
+		# --teleport-legit: перенос через сервер, как это делает дверь
+		if _args.has("teleport-legit"):
+			MatchState.local_player.teleport(_teleport_before + TELEPORT_DELTA)
+		else:
+			MatchState.local_player.position += TELEPORT_DELTA
 		# дальше стоим на месте: так видно, откатила ли серверная правда подделку
 		Input.action_release("left")
 		Input.action_release("right")
-		print("SMOKE CLIENT TELEPORTS: %s -> %s" % [
+		print("SMOKE CLIENT TELEPORTS%s: %s -> %s" % [
+			" (согласовано)" if _args.has("teleport-legit") else "",
 			_teleport_before, MatchState.local_player.position
 		])
 	

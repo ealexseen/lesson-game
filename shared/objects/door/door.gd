@@ -35,8 +35,8 @@ func _input(event: InputEvent) -> void:
 			
 		if (event.keycode == KEY_UP or event.keycode == KEY_W):
 			if (_is_open and player):
-				# телепорт двигает только своего игрока, позиция уедет по сети
-				player.position = Vector2(door_to.position.x, door_to.position.y - 70)
+				# перенос согласуем с сервером: иначе поправка движения вернёт игрока
+				player.teleport(Vector2(door_to.position.x, door_to.position.y - 70))
 				
 				_is_open = false
 				_is_visit = false

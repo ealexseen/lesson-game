@@ -14,8 +14,8 @@ func activate() -> bool:
 	# Создаем эффект телепортации
 	create_teleport_effect()
 	
-	# Телепортируем
-	player.global_position += direction * teleport_distance
+	# Телепортируем (перенос согласуется с сервером, иначе движение вернёт игрока)
+	player.teleport(player.global_position + direction * teleport_distance)
 	
 	# Создаем эффект появления
 	create_appear_effect()

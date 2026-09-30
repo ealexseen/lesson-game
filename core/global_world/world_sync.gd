@@ -88,6 +88,28 @@ func _reconcile(_seq: int, _position: Vector2) -> void:
 		player.reconcile(_seq, _position)
 
 
+## Владелец сообщает, что перенёс игрока сам: дверь, способность телепорта,
+## возврат после падения с карты. Без этого поправка движения вернёт его назад.
+func send_teleport(_position: Vector2) -> void:
+	if is_server() or not NetworkManager.is_connected_to_game():
+		return
+	
+	rpc_id(1, "_submit_teleport", _position)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _submit_teleport(_position: Vector2) -> void:
+	if not is_server():
+		return
+	
+	var player: Player = MatchState.players.get(multiplayer.get_remote_sender_id())
+	
+	if player == null:
+		return
+	
+	player.apply_remote_teleport(_position)
+
+
 # Видимость движения: решает сервер, потому что движение рассылает он
 
 func _on_peer_connected(_peer_id: int) -> void:

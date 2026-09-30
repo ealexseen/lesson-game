@@ -142,7 +142,8 @@ func peer_ping(_peer_id: int) -> int:
 func host_game(_name: String, _game_password: String = "", _use_dtls: bool = false) -> String:
 	disconnect_game()
 	
-	port = DEFAULT_PORT
+	# порт можно задать и хосту: удобно для второго сервера на той же машине
+	port = int(_cmdline_args().get("port", DEFAULT_PORT))
 	max_clients = MatchState.MAX_PLAYERS - 1
 	var peer := ENetMultiplayerPeer.new()
 	var error := peer.create_server(
