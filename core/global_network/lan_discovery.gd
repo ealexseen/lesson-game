@@ -5,12 +5,14 @@ class_name LanDiscovery extends Node
 ##
 ## Порт обнаружения отдельный от игрового (NetworkManager.DEFAULT_PORT = 8910),
 ## иначе слушатель и ENet-сервер конфликтовали бы на одной машине.
-## Слушатель на машине может быть только один, поэтому занятый порт — не приговор:
-## пока лобби открыто, попытки занять порт повторяются.
+## Слушателей на одной машине может быть несколько (два клиента для проверки), а
+## порт у машины один, поэтому клиент занимает первый свободный порт диапазона,
+## а хост рассылает бекон во все порты диапазона.
 
 signal servers_changed(_servers: Dictionary)
 
 const DISCOVERY_PORT := 8911
+const DISCOVERY_PORT_COUNT := 5
 const BROADCAST_ADDRESS := "255.255.255.255"
 const BEACON_INTERVAL := 1.0
 const SERVER_TIMEOUT := 3.5
@@ -70,7 +72,7 @@ func is_searching() -> bool:
 	return _udp != null and not _broadcasting
 
 
-## Слушать пытаемся, но порт занят другим экземпляром игры — поиск пока недоступен.
+## Слушать пытаемся, но все порты диапазона заняты — поиск пока недоступен.
 func search_unavailable() -> bool:
 	return _listen_requested and _udp == null
 
@@ -82,18 +84,23 @@ func get_servers() -> Dictionary[String, Dictionary]:
 func _try_listen() -> void:
 	_close_socket()
 	
-	var udp := PacketPeerUDP.new()
-	var error := udp.bind(DISCOVERY_PORT)
-	
-	if error != OK:
-		udp.close()
-		_retry_left = RETRY_INTERVAL
+	# первый свободный порт диапазона: на одной машине может работать несколько
+	# клиентов, а слушатель на порт может быть только один
+	for offset in DISCOVERY_PORT_COUNT:
+		var udp := PacketPeerUDP.new()
+		var error := udp.bind(DISCOVERY_PORT + offset)
+		
+		if error != OK:
+			udp.close()
+			continue
+		
+		_udp = udp
+		_broadcasting = false
+		_retry_left = 0.0
 		set_process(true)
 		return
 	
-	_udp = udp
-	_broadcasting = false
-	_retry_left = 0.0
+	_retry_left = RETRY_INTERVAL
 	set_process(true)
 
 
@@ -144,8 +151,11 @@ func _send_beacon() -> void:
 	}).to_utf8_buffer()
 	
 	for address in _beacon_targets():
-		_udp.set_dest_address(address, DISCOVERY_PORT)
-		_udp.put_packet(payload)
+		# бекон уходит во весь диапазон портов: клиент на этой машине мог занять
+		# не 8911, а следующий свободный
+		for offset in DISCOVERY_PORT_COUNT:
+			_udp.set_dest_address(address, DISCOVERY_PORT + offset)
+			_udp.put_packet(payload)
 
 
 ## Куда шлём бекон: ограниченный бродкаст плюс направленный бродкаст каждой частной
