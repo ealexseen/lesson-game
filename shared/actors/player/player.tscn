@@ -61,7 +61,7 @@ player = NodePath("../..")
 [node name="NetTarget" type="Node2D" parent="."]
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="NetTarget"]
-replication_interval = 0.05
+replication_interval = 0.033
 root_path = NodePath("..")
 replication_config = SubResource("SceneReplicationConfig_player")
 

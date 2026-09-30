@@ -29,6 +29,12 @@ func _ready() -> void:
 	# состав меняется — сразу пересчитываем, кому какое движение слать
 	MatchState.participants_changed.connect(refresh_visibility)
 	multiplayer.peer_connected.connect(_on_peer_connected)
+	# пир вошёл в мир: его игроки должны получить чужие позиции сразу, а не через 0.5 с
+	peer_entered_world.connect(_on_peer_entered_world)
+
+
+func _on_peer_entered_world(_peer_id: int) -> void:
+	refresh_visibility()
 
 
 ## В одиночной игре сервером считаем себя.

@@ -15,6 +15,9 @@ class_name Player
 
 const REMOTE_SMOOTH_SPEED := 15.0 # плавность чужого игрока
 const REMOTE_TELEPORT_DISTANCE := 300.0 # скачок сетевой цели — это телепорт
+const REMOTE_CORRECT_SPEED := 8.0 # как быстро копия возвращается к сетевой цели
+const REMOTE_VELOCITY_SMOOTH := 0.4 # сглаживание оценки скорости чужого игрока
+const REMOTE_VELOCITY_DECAY := 12.0 # гашение оценки скорости, когда игрок встал
 const VISIBILITY_RADIUS := 1500.0 # дальше не шлём чужое движение
 const VISIBILITY_HYSTERESIS := 250.0 # чтобы не мигало на границе
 ## Радиус интереса решает сервер (WorldSync): далёким игрокам чужое движение не уходит.
@@ -26,6 +29,7 @@ const REPLAY_LIMIT := 120 # сколько кадров истории держ�
 const INPUT_TIMEOUT := 0.5 # молчание владельца считаем нулевым вводом
 const RECONCILE_ERROR := 32.0 # с такого расхождения пишем в лог сервера
 const TELEPORT_GRACE := 0.4 # столько владелец не слушает поправки после переноса
+const SYNC_HIDE_TIMEOUT := 1.0 # столько ждём первую синхронизацию, потом показываем как есть
 
 @onready var equippable_item_holder: EquippableItemHolder = %EquippableItemHolder
 @onready var camera: Camera2D = $Camera2D
@@ -52,6 +56,10 @@ var _reported_position := Vector2.ZERO # сервер: что владелец �
 var _history: Array[Dictionary] = [] # владелец: кадры для пересчёта
 var _pending_reconcile: Dictionary = {}
 var _teleport_grace_left := 0.0 # окно, в котором поправки движения игнорируются
+var _sync_hide_left := 0.0 # на клиенте: сколько ещё прятать чужую копию до синхронизации
+var _remote_velocity := Vector2.ZERO # оценка скорости чужого игрока
+var _remote_last_target := Vector2.ZERO
+var _remote_target_elapsed := 0.0
 
 # Получаем гравитацию из проекта
 var gravity: float = ProjectSettings.get_setting('physics/2d/default_gravity')
@@ -77,6 +85,25 @@ func _ready() -> void:
 	net_target.position = position
 	
 	_setup_nameplate()
+	MatchState.participants_changed.connect(_setup_nameplate)
+	
+	# До первой синхронизации чужое место неизвестно: показывать копию на точке
+	# появления — значит рисовать игрока не там, где он есть. Прячем до первого пакета.
+	if is_local() or WorldSync.is_server():
+		visible = true
+		return
+	
+	var synchronizer: MultiplayerSynchronizer = net_target.get_node_or_null(
+		"MultiplayerSynchronizer"
+	)
+	
+	if synchronizer == null:
+		visible = true
+		return
+	
+	visible = false
+	_sync_hide_left = SYNC_HIDE_TIMEOUT
+	synchronizer.synchronized.connect(_on_synchronized)
 
 
 ## Ник и цвет показываем только у чужих игроков: своя табличка перед глазами мешает.
@@ -95,18 +122,66 @@ func is_local() -> bool:
 	return MatchState.local_player == self
 
 
+## Первый пакет синхронизации пришёл: место известно, копию можно показывать.
+func _on_synchronized() -> void:
+	_sync_hide_left = 0.0
+	visible = true
+
+
 func _process(_delta: float) -> void:
+	if _sync_hide_left > 0.0:
+		_sync_hide_left -= _delta
+		
+		# синхронизация не пришла — показываем как есть, лишь бы игрок не пропал
+		if _sync_hide_left <= 0.0:
+			visible = true
+	
 	if is_local():
 		return
 	
-	# чужой игрок плавно едет за сетевой целью: её пишет сервер
-	if position.distance_to(net_target.position) > REMOTE_TELEPORT_DISTANCE:
+	# на сервере истина только что посчитана здесь же: показываем её без сглаживания,
+	# иначе даже хост видел бы чужого игрока с задержкой
+	if WorldSync.is_server():
 		position = net_target.position
+		return
+	
+	_track_remote_target(_delta)
+
+
+## Ведём чужую копию по её же скорости и мягко поправляем по сети: чистое
+## сглаживание всегда отставало бы от игрока на десятки пикселей.
+func _track_remote_target(_delta: float) -> void:
+	var target := net_target.position
+	_remote_target_elapsed += _delta
+	
+	if position.distance_to(target) > REMOTE_TELEPORT_DISTANCE:
+		position = target
+		_remote_velocity = Vector2.ZERO
+		_remote_last_target = target
+		_remote_target_elapsed = 0.0
+		return
+	
+	if target != _remote_last_target:
+		# скорость оцениваем по разнице между пакетами и сглаживаем, чтобы не дрожало
+		var elapsed := maxf(_remote_target_elapsed, 0.01)
+		var measured := (target - _remote_last_target) / elapsed
+		
+		if _remote_velocity.dot(measured) < 0.0:
+			# игрок развернулся: прежняя оценка врёт, берём новую сразу
+			_remote_velocity = measured
+		else:
+			_remote_velocity = _remote_velocity.lerp(measured, REMOTE_VELOCITY_SMOOTH)
+		
+		_remote_last_target = target
+		_remote_target_elapsed = 0.0
 	else:
-		position = position.lerp(
-			net_target.position,
-			clampf(_delta * REMOTE_SMOOTH_SPEED, 0.0, 1.0)
+		# цель не менялась: игрок, скорее всего, встал — гасим оценку скорости
+		_remote_velocity = _remote_velocity.lerp(
+			Vector2.ZERO, clampf(_delta * REMOTE_VELOCITY_DECAY, 0.0, 1.0)
 		)
+	
+	position += _remote_velocity * _delta
+	position = position.lerp(target, clampf(_delta * REMOTE_CORRECT_SPEED, 0.0, 1.0))
 
 
 func _unhandled_key_input(event: InputEvent) -> void:

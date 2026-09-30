@@ -40,6 +40,7 @@ const ADMIN_QUIT_DELAY := 2.0
 const TELEPORT_DELAY := 6.0
 const TELEPORT_CHECK_DELAY := 2.0
 const TELEPORT_DELTA := Vector2(2000.0, 0.0)
+const LAG_REPORT_INTERVAL := 2.0
 
 # тайминги мира: считаются от момента, когда карта загрузилась
 const BREAK_DELAY := 6.0
@@ -95,6 +96,7 @@ var _expect_kick := false
 var _teleported := false
 var _teleport_checked := false
 var _teleport_before := Vector2.ZERO
+var _lag_elapsed := 0.0
 
 
 func _ready() -> void:
@@ -148,6 +150,7 @@ func _process(_delta: float) -> void:
 		return
 	
 	_track_world_time()
+	_report_remote_lag(_delta)
 	
 	if _args.has("autohost"):
 		_tick_host()
@@ -155,6 +158,37 @@ func _process(_delta: float) -> void:
 		_tick_client()
 	elif _elapsed >= LAN_SEARCH_TIME:
 		_finish(1, "SMOKE LAN FAIL: хосты не найдены за %.0f с" % LAN_SEARCH_TIME)
+
+
+## Насколько отрисованная копия чужого игрока отстаёт от последней сетевой цели.
+## Меряем, потому что отставание видно глазом как «второй игрок едет следом».
+func _report_remote_lag(_delta: float) -> void:
+	if not (_args.has("world") or _args.has("bot")):
+		return
+	
+	_lag_elapsed += _delta
+	
+	if _lag_elapsed < LAG_REPORT_INTERVAL:
+		return
+	
+	_lag_elapsed = 0.0
+	var worst := -1.0
+	var worst_name := ""
+	
+	for peer_id in MatchState.players:
+		var player: Player = MatchState.players[peer_id]
+		
+		if player == MatchState.local_player:
+			continue
+		
+		var lag := player.position.distance_to(player.net_target.position)
+		
+		if lag > worst:
+			worst = lag
+			worst_name = MatchState.participant_name(peer_id)
+	
+	if worst >= 0.0:
+		print("SMOKE REMOTE LAG: %s — %.1f px" % [worst_name, worst])
 
 
 func _track_world_time() -> void:
