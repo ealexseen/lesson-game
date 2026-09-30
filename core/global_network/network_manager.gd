@@ -39,6 +39,11 @@ const ADMIN_KICK := "kick"
 const ADMIN_STOP := "stop"
 const ADMIN_STATUS := "status"
 
+# защита канала: DTLS и пределы размеров пакетов
+const DTLS_YEARS := 10
+const MAX_SYNC_PACKET_SIZE := 65536
+const MAX_DELTA_PACKET_SIZE := 4096
+
 var mode: Mode = Mode.OFFLINE
 var player_name: String = DEFAULT_NAME
 var lan: LanDiscovery
@@ -59,6 +64,10 @@ var _handshake_left: float = 0.0
 var _min_players: int = 1
 # токен админ-команд: пустой — команды выключены
 var _admin_token: String = ""
+# шифрование канала (DTLS): включается аргументом --dtls у любой роли
+var _dtls_enabled := false
+var _dtls_key: CryptoKey
+var _dtls_certificate: X509Certificate
 
 
 func _ready() -> void:
@@ -77,6 +86,11 @@ func _ready() -> void:
 	
 	# запуск вида «godot --headless --path . -- --server»
 	var args := _cmdline_args()
+	_dtls_enabled = args.has("dtls")
+	
+	# пределы размеров пакетов: у ENet без них ограничений нет
+	multiplayer.set_max_sync_packet_size(MAX_SYNC_PACKET_SIZE)
+	multiplayer.set_max_delta_packet_size(MAX_DELTA_PACKET_SIZE)
 	
 	if args.has("server"):
 		_start_dedicated_from_args(args)
@@ -118,7 +132,7 @@ func peer_ping(_peer_id: int) -> int:
 
 
 ## Создать игру. Возвращает текст ошибки или пустую строку.
-func host_game(_name: String, _game_password: String = "") -> String:
+func host_game(_name: String, _game_password: String = "", _use_dtls: bool = false) -> String:
 	disconnect_game()
 	
 	max_clients = MatchState.MAX_PLAYERS - 1
@@ -129,6 +143,8 @@ func host_game(_name: String, _game_password: String = "") -> String:
 	
 	if error != OK:
 		return _host_error_text(error)
+	
+	_enable_server_dtls(peer, _use_dtls or _dtls_enabled)
 	
 	player_name = _clean_name(_name)
 	_password = _game_password
@@ -152,7 +168,8 @@ func start_dedicated(
 	_game_password: String = "",
 	_min_players_count: int = 1,
 	_server_name: String = DEDICATED_NAME,
-	_token: String = ""
+	_token: String = "",
+	_use_dtls: bool = false
 ) -> String:
 	disconnect_game()
 	
@@ -165,6 +182,8 @@ func start_dedicated(
 	
 	if error != OK:
 		return _host_error_text(error)
+	
+	_enable_server_dtls(peer, _use_dtls or _dtls_enabled)
 	
 	_password = _game_password
 	_min_players = maxi(1, _min_players_count)
@@ -201,7 +220,8 @@ func _start_dedicated_from_args(_args: Dictionary) -> void:
 		str(_args.get("password", "")),
 		int(_args.get("min-players", "1")),
 		str(_args.get("name", DEDICATED_NAME)),
-		str(_args.get("admin-token", ""))
+		str(_args.get("admin-token", "")),
+		_args.has("dtls")
 	)
 	
 	if error != "":
@@ -210,9 +230,69 @@ func _start_dedicated_from_args(_args: Dictionary) -> void:
 		get_tree().quit(1)
 		return
 	
-	print("SERVER READY: порт %d, игроков до %d, автостарт от %d, админ-команды %s" % [
-		DEFAULT_PORT, max_clients, _min_players, "включены" if _admin_token != "" else "выключены"
+	print("SERVER READY: порт %d, игроков до %d, автостарт от %d, админ-команды %s, DTLS %s" % [
+		DEFAULT_PORT, max_clients, _min_players,
+		"включены" if _admin_token != "" else "выключены",
+		"включён" if _dtls_enabled else "выключен"
 	])
+# Шифрование канала
+
+## DTLS для сервера: самоподписанный сертификат на время работы.
+func _enable_server_dtls(_peer: ENetMultiplayerPeer, _use_dtls: bool) -> void:
+	if not _use_dtls:
+		return
+	
+	_make_self_signed_certificate()
+	
+	var connection := _peer.get_host()
+	
+	if connection == null or _dtls_key == null or _dtls_certificate == null:
+		print("SERVER: DTLS не включился — нет сертификата или соединения")
+		return
+	
+	var error := connection.dtls_server_setup(TLSOptions.server(_dtls_key, _dtls_certificate))
+	print("SERVER: DTLS %s (код %d)" % ["включён" if error == OK else "не включился", error])
+
+
+## DTLS для клиента: канал шифруется, но сертификат сервера не проверяется —
+## он самоподписанный, проверять его нечем. Это защита от прослушивания,
+## а не от подмены сервера.
+func _enable_client_dtls(_peer: ENetMultiplayerPeer, _address: String, _use_dtls: bool) -> void:
+	if not _use_dtls:
+		return
+	
+	var connection := _peer.get_host()
+	
+	if connection == null:
+		print("CLIENT: DTLS не включился — нет соединения")
+		return
+	
+	var error := connection.dtls_client_setup(_address, TLSOptions.client_unsafe())
+	print("CLIENT: DTLS %s (код %d)" % ["включён" if error == OK else "не включился", error])
+
+
+func _make_self_signed_certificate() -> void:
+	var crypto := Crypto.new()
+	var now := Time.get_datetime_dict_from_system(true)
+	var expires := now.duplicate()
+	expires["year"] = int(now["year"]) + DTLS_YEARS
+	
+	_dtls_key = crypto.generate_rsa(2048)
+	_dtls_certificate = crypto.generate_self_signed_certificate(
+		_dtls_key,
+		"CN=LessonGame",
+		_date_stamp(now),
+		_date_stamp(expires)
+	)
+
+
+func _date_stamp(_moment: Dictionary) -> String:
+	return "%04d%02d%02d%02d%02d%02d" % [
+		_moment["year"], _moment["month"], _moment["day"],
+		_moment["hour"], _moment["minute"], _moment["second"]
+	]
+
+
 ## Адреса, по которым до этой машины могут дотянуться другие: без loopback и
 ## автоконфигурации, только IPv4 (ENet в проекте ходит по IPv4).
 ## Интерфейсов бывает много (Ethernet, Hamachi, Hyper-V, VPN) — какой из них видят
@@ -232,7 +312,12 @@ func local_addresses() -> PackedStringArray:
 
 
 ## Подключиться к игре. Возвращает текст ошибки или пустую строку.
-func join_game(_address: String, _name: String, _game_password: String = "") -> String:
+func join_game(
+	_address: String,
+	_name: String,
+	_game_password: String = "",
+	_use_dtls: bool = false
+) -> String:
 	disconnect_game()
 	
 	var address := _address.strip_edges()
@@ -245,6 +330,8 @@ func join_game(_address: String, _name: String, _game_password: String = "") -> 
 	
 	if error != OK:
 		return "Не удалось подключиться к «%s» (код %d)" % [address, error]
+	
+	_enable_client_dtls(peer, address, _use_dtls or _dtls_enabled)
 	
 	player_name = _clean_name(_name)
 	_pending_password = _game_password

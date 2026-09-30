@@ -72,7 +72,7 @@ $env:APPDATA = Join-Path (Get-Location) '.dsh_user'   # иначе движок 
 
 ```powershell
 # сервер (без окна, без игрока за машиной), аргументы после --
-& $godot --headless --path . -- --server [--min-players=2] [--password=secret] [--name=MyServer] [--admin-token=secret]
+& $godot --headless --path . -- --server [--min-players=2] [--password=secret] [--name=MyServer] [--admin-token=secret] [--dtls]
 
 # проверка: два бота подключаются и играют
 & $godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --name=Bot1 --bot --hold=12
@@ -82,7 +82,9 @@ $env:APPDATA = Join-Path (Get-Location) '.dsh_user'   # иначе движок 
 & $godot --headless --path . res://core/dev_checks/network_smoke.tscn -- --autoconnect=127.0.0.1 --name=Admin --admin-token=secret --admin-stop
 ```
 
-Успех: сервер печатает `SERVER READY: порт 8910, игроков до 20, автостарт от N, админ-команды включены|выключены` и `GAME STARTED: участников N`; боты — `SMOKE BOT DONE` с `players=N` (сервер в число игроков не входит), `dedicated=true` и `scene=map_1.tscn`. Кикнутый бот (`--expect-kick`) пишет `SMOKE CLIENT KICKED OK: <причина>`; после `--admin-stop` сервер печатает `SERVER STOPPED` и процесс завершается.
+Успех: сервер печатает `SERVER READY: порт 8910, игроков до 20, автостарт от N, админ-команды включены|выключены, DTLS включён|выключен` и `GAME STARTED: участников N`; боты — `SMOKE BOT DONE` с `players=N` (сервер в число игроков не входит), `dedicated=true` и `scene=map_1.tscn`. Кикнутый бот (`--expect-kick`) пишет `SMOKE CLIENT KICKED OK: <причина>`; после `--admin-stop` сервер печатает `SERVER STOPPED` и процесс завершается.
+
+**DTLS:** флаг `--dtls` нужен **обеим** сторонам. Клиент с ним печатает `CLIENT: DTLS включён (код 0)`, сервер — `SERVER: DTLS включён (код 0)`. Обычный клиент к DTLS-серверу не проходит (это и есть негативная проверка шифрования), а в stderr сервера при этом сыплется `mbedtls error: returned -0x7700` и `ERROR: TLS handshake error: -30464` — ожидаемо.
 
 Сервер не завершается сам: в фоновом прогоне его нужно останавливать (`Stop-Process`), иначе он держит порт 8910. stdout под `Start-Process` буферизуется — ошибки читайте из stderr, итог — из отчётов (`--report`). Развёртывание (systemd/docker/файрвол) — §12 в `docs/multiplayer_plan.md`.
 
