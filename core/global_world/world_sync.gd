@@ -116,6 +116,47 @@ func _submit_teleport(_position: Vector2) -> void:
 	player.apply_remote_teleport(_position)
 
 
+# Экипировка: владелец сообщает серверу, сервер раздаёт остальным
+
+## Владелец сменил предмет в руках, сторону взгляда или начал использовать предмет.
+## Через сервер, а не напрямую: клиент видит только сервер, поэтому его сообщение
+## до других игроков само не дойдёт — раньше выбор предмета терялся именно так.
+func send_equipment(_action: String, _value = null) -> void:
+	if is_server() or not NetworkManager.is_connected_to_game():
+		return
+	
+	rpc_id(1, "_submit_equipment", _action, _value)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _submit_equipment(_action: String, _value) -> void:
+	if not is_server():
+		return
+	
+	var sender := multiplayer.get_remote_sender_id()
+	var player: Player = MatchState.players.get(sender)
+	
+	if player == null:
+		return
+	
+	player.equippable_item_holder.apply_equipment(_action, _value)
+	rpc("_apply_equipment", sender, _action, _value)
+
+
+@rpc("authority", "call_remote", "reliable")
+func _apply_equipment(_peer_id: int, _action: String, _value) -> void:
+	# владелец уже применил это у себя
+	if _peer_id == multiplayer.get_unique_id():
+		return
+	
+	var player: Player = MatchState.players.get(_peer_id)
+	
+	if player == null:
+		return
+	
+	player.equippable_item_holder.apply_equipment(_action, _value)
+
+
 # Видимость движения: решает сервер, потому что движение рассылает он
 
 func _on_peer_connected(_peer_id: int) -> void:
@@ -403,6 +444,7 @@ func snapshot() -> Dictionary:
 		"spawned": _spawned.duplicate(true),
 		"next_spawn_id": _next_spawn_id,
 		"players": _player_positions(),
+		"equipment": _player_equipment(),
 	}
 
 
@@ -415,6 +457,16 @@ func _player_positions() -> Dictionary:
 		positions[peer_id] = MatchState.players[peer_id].position
 	
 	return positions
+
+
+## Что у кого в руках: иначе новичок видел бы чужих игроков с пустыми руками.
+func _player_equipment() -> Dictionary:
+	var equipment := {}
+	
+	for peer_id in MatchState.players:
+		equipment[peer_id] = MatchState.players[peer_id].equippable_item_holder.state()
+	
+	return equipment
 
 
 @rpc("any_peer", "call_remote", "reliable")
@@ -466,12 +518,18 @@ func _apply_snapshot(_data: Dictionary) -> void:
 	
 	# игроки: сразу ставим чужие копии на настоящие места, до первой синхронизации
 	var players: Dictionary = _data.get("players", {})
+	var equipment: Dictionary = _data.get("equipment", {})
 	
 	for peer_id in players:
 		var player: Player = MatchState.players.get(int(peer_id))
 		
-		if player != null and player != MatchState.local_player:
-			player.apply_remote_position(players[peer_id])
+		if player == null or player == MatchState.local_player:
+			continue
+		
+		player.apply_remote_position(players[peer_id])
+		
+		if equipment.has(peer_id):
+			player.equippable_item_holder.apply_state(equipment[peer_id])
 
 
 # Спавн лута

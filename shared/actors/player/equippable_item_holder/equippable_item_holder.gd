@@ -1,7 +1,8 @@
 class_name EquippableItemHolder extends Node2D
 
-## Предмет в руках. Владелец применяет экипировку у себя и рассылает остальным,
-## чтобы чужой игрок видел то же оружие и ту же сторону.
+## Предмет в руках. Владелец применяет экипировку у себя, а остальным её раздаёт
+## сервер: клиент видит напрямую только сервер, поэтому своё сообщение он шлёт ему,
+## а тот пересылает остальным — иначе выбор предмета не доходил бы до других игроков.
 
 var owner_player: Player
 var current_item
@@ -19,22 +20,11 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	save_position = position
-	WorldSync.peer_entered_world.connect(_on_peer_entered_world)
 
 
-## Новичку досылаем то, что у нас уже в руках: он это пропустил.
-func _on_peer_entered_world(_peer_id: int) -> void:
-	if not _is_owner_peer():
-		return
-	
-	# о себе заботиться не нужно, а rpc_id на себя движок запрещает
-	if _peer_id == owner_player.peer_id:
-		return
-	
-	if current_key != null:
-		rpc_id(_peer_id, "_remote_equip", current_key)
-	if _last_direction != 0:
-		rpc_id(_peer_id, "_remote_flip", _last_direction)
+## Что у нас в руках и куда мы смотрим: это уходит и снапшотом, и по изменениям.
+func state() -> Dictionary:
+	return {"key": current_key, "direction": _last_direction}
 
 
 func try_to_use_item() -> void:
@@ -43,7 +33,7 @@ func try_to_use_item() -> void:
 	
 	# рассылаем только когда анимация действительно началась, а не каждый кадр
 	if current_item.try_to_use() and _is_owner_peer():
-		_send_to_world("_remote_use")
+		WorldSync.send_equipment("use")
 
 
 func on_equip_item(player: Player, item_key) -> void:
@@ -53,7 +43,7 @@ func on_equip_item(player: Player, item_key) -> void:
 	_equip(item_key)
 	
 	if _is_owner_peer():
-		_send_to_world("_remote_equip", item_key)
+		WorldSync.send_equipment("equip", item_key)
 
 
 func on_unequip_item(player: Player) -> void:
@@ -63,7 +53,7 @@ func on_unequip_item(player: Player) -> void:
 	_unequip()
 	
 	if _is_owner_peer():
-		_send_to_world("_remote_unequip")
+		WorldSync.send_equipment("unequip")
 
 
 func direction_flip(direction: int) -> void:
@@ -75,20 +65,7 @@ func direction_flip(direction: int) -> void:
 	
 	# 0 — это «стою на месте», сторона не меняется, рассылать нечего
 	if direction != 0 and _is_owner_peer():
-		_send_to_world("_remote_flip", direction)
-
-
-## Рассылаем только тем, кто уже на карте. У пира в лобби наших узлов нет: он
-## отбросит пакет, напишет в лог Node not found и не подтвердит кэш путей.
-func _send_to_world(_method: StringName, _value = null) -> void:
-	for peer_id in multiplayer.get_peers():
-		if not WorldSync.is_peer_in_world(peer_id):
-			continue
-		
-		if _value == null:
-			rpc_id(peer_id, _method)
-		else:
-			rpc_id(peer_id, _method, _value)
+		WorldSync.send_equipment("flip", direction)
 
 
 ## Рассылает только владелец игрока: у остальных это чужая экипировка.
@@ -142,27 +119,32 @@ func _apply_flip(direction: int) -> void:
 		position = Vector2(-save_position.x, save_position.y)
 
 
-# Приём у остальных
+# Приём у остальных: приходит от сервера (по изменению или снапшотом)
 
-@rpc("authority", "call_remote", "reliable")
-func _remote_equip(item_key) -> void:
-	_equip(item_key)
+## Применить состояние чужого игрока: предмет, сторона взгляда, анимация.
+func apply_equipment(_action: String, _value = null) -> void:
+	match _action:
+		"equip":
+			_equip(_value)
+		"unequip":
+			_unequip()
+		"flip":
+			_last_direction = int(_value)
+			_apply_flip(int(_value))
+		"use":
+			if current_item != null:
+				current_item.try_to_use()
 
 
-@rpc("authority", "call_remote", "reliable")
-func _remote_unequip() -> void:
-	_unequip()
-
-
-@rpc("authority", "call_remote", "reliable")
-func _remote_flip(direction: int) -> void:
-	_apply_flip(direction)
-
-
-## Чужое использование: играем ту же анимацию, эффекты остаются у владельца.
-@rpc("authority", "call_remote", "reliable")
-func _remote_use() -> void:
-	if current_item == null:
-		return
+## Состояние из снапшота: новичок должен увидеть то же, что и все остальные.
+func apply_state(_state: Dictionary) -> void:
+	var key = _state.get("key", null)
 	
-	current_item.try_to_use()
+	if key != null:
+		_equip(key)
+	
+	var direction := int(_state.get("direction", 0))
+	
+	if direction != 0:
+		_last_direction = direction
+		_apply_flip(direction)

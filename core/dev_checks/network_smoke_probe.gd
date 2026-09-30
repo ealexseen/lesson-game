@@ -41,6 +41,7 @@ const TELEPORT_DELAY := 6.0
 const TELEPORT_CHECK_DELAY := 2.0
 const TELEPORT_DELTA := Vector2(2000.0, 0.0)
 const LAG_REPORT_INTERVAL := 2.0
+const BOT_EQUIP_DELAY := 4.0
 
 # тайминги мира: считаются от момента, когда карта загрузилась
 const BREAK_DELAY := 6.0
@@ -97,6 +98,8 @@ var _teleported := false
 var _teleport_checked := false
 var _teleport_before := Vector2.ZERO
 var _lag_elapsed := 0.0
+var _bot_equipped := false
+var _bot_equip_fallback := false
 
 
 func _ready() -> void:
@@ -189,6 +192,23 @@ func _report_remote_lag(_delta: float) -> void:
 	
 	if worst >= 0.0:
 		print("SMOKE REMOTE LAG: %s — %.1f px" % [worst_name, worst])
+	
+	_report_remote_hands()
+
+
+## Что видно в руках у чужих игроков: выбор предмета должен доходить до всех.
+func _report_remote_hands() -> void:
+	for peer_id in MatchState.players:
+		var player: Player = MatchState.players[peer_id]
+		
+		if player == MatchState.local_player:
+			continue
+		
+		var item = player.equippable_item_holder.current_item
+		print("SMOKE REMOTE HANDS: %s — %s" % [
+			MatchState.participant_name(peer_id),
+			"пусто" if item == null else item.name,
+		])
 
 
 func _track_world_time() -> void:
@@ -701,6 +721,19 @@ func _tick_bot() -> void:
 		Input.action_release("left")
 		Input.action_release("right")
 		Input.action_press("left" if phase == 0 else "right")
+	
+	# бот берёт предмет в руки: так проверяем, что чужой выбор виден остальным
+	if not _bot_equipped and _world_elapsed() >= BOT_EQUIP_DELAY:
+		_bot_equipped = true
+		EventSystem.EQU_hotkey_pressed.emit(MatchState.local_player, 1)
+		print("SMOKE BOT EQUIPS: слот 1")
+	
+	if _bot_equipped and not _bot_equip_fallback and _world_elapsed() >= BOT_EQUIP_DELAY + 1.0:
+		_bot_equip_fallback = true
+		
+		if MatchState.local_player.equippable_item_holder.current_item == null:
+			EventSystem.EQU_equip_item.emit(MatchState.local_player, ItemConfig.Keys.Axe)
+			print("SMOKE BOT EQUIPS: напрямую (хотбар пуст)")
 	
 	if (_args.has("teleport") or _args.has("teleport-legit")) and not _teleported and _elapsed >= TELEPORT_DELAY:
 		_teleported = true
